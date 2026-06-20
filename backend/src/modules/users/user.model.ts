@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 
-// ==| ENUM |===========
+// ==| ENUM |────────────────────────────────────────────────────────────────
 export enum UserRole {
   USER = "user",
   MODERATOR = "moderator",
@@ -14,7 +14,7 @@ export enum BadgeType {
   MODERATOR = "moderator",
 }
 
-// ==| SUB INTERFACE |===========
+// ===| SUB INTERFACE |────────────────────────────────────────────────────────────────
 export interface ISocialLinks {
   github?: string;
   linkedIn?: string;
@@ -27,8 +27,7 @@ export interface IBadge {
   awardedAt: Date;
 }
 
-// ==| INTERFACE |===========
-
+// ===| INTERFACE |────────────────────────────────────────────────────────────────
 export interface IUser extends Document {
   _id: Types.ObjectId;
   accountId: Types.ObjectId;
@@ -49,7 +48,6 @@ export interface IUser extends Document {
 }
 
 // ==| Actual Schema |----------------------------------------------------------
-
 const socialLinksSchema = new Schema<ISocialLinks>({
   github: { type: String, trim: true },
   linkedIn: { type: String, trim: true },
@@ -69,28 +67,29 @@ const badgeSchema = new Schema<IBadge>({
   },
 });
 
-const userSchema = new Schema<IUser>({
-  accountId: {
-    type: Schema.Types.ObjectId,
-    ref: "Account",
-    required: true,
-    unique: true,
-  },
+const userSchema = new Schema<IUser>(
+  {
+    accountId: {
+      type: Schema.Types.ObjectId,
+      ref: "Account",
+      required: true,
+      unique: true,
+    },
 
-  username: {
-    type: String,
-    required: [true, "Username is required"],
-    unique: true,
-    trim: true,
-    toLowerCase: true,
-    minlength: [5, "Username require at least 5 characters"],
-    maxlength: [20, "Username cannot exceed 20 characters"],
-    match: [
-      /^[a-z0-9_]+$/,
-      "Username can only contain lowercase letters, numbers, and underscores",
-    ],
-        index: true,
-  },
+    username: {
+      type: String,
+      required: [true, "Username is required"],
+      unique: true,
+      trim: true,
+      toLowerCase: true,
+      minlength: [5, "Username require at least 5 characters"],
+      maxlength: [20, "Username cannot exceed 20 characters"],
+      match: [
+        /^[a-z0-9_]+$/,
+        "Username can only contain lowercase letters, numbers, and underscores",
+      ],
+      index: true,
+    },
 
     displayName: {
       type: String,
@@ -100,22 +99,22 @@ const userSchema = new Schema<IUser>({
       maxlength: [50, "Display name cannot exceed 50 characters"],
     },
 
-        avatar: {
+    avatar: {
       type: String,
       default: null,
     },
- 
+
     banner: {
       type: String,
       default: null,
     },
- 
+
     bio: {
       type: String,
       maxlength: [300, "Bio cannot exceed 300 characters"],
       default: null,
     },
- 
+
     location: {
       type: String,
       maxlength: [100, "Location cannot exceed 100 characters"],
@@ -123,44 +122,47 @@ const userSchema = new Schema<IUser>({
     },
 
     socialLinks: {
-        type: socialLinksSchema,
-        default: () => ({}),
+      type: socialLinksSchema,
+      default: () => ({}),
     },
 
     role: {
-        type: String,
-        enum: UserRole,
-        default: UserRole.USER,
-    }, 
+      type: String,
+      enum: UserRole,
+      default: UserRole.USER,
+    },
 
     badges: {
-        type: [badgeSchema],
-        default: [],
-},
+      type: [badgeSchema],
+      default: [],
+    },
 
     isOnline: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
     },
-    
+
     lastSeen: {
-        type: Date,
-        default: Date.now,
+      type: Date,
+      default: Date.now,
     },
 
     isProfileComplete: {
-        type: Boolean,
-        default: false,
-    }
-
-}, 
-{
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
     timestamps: true,
     versionKey: false,
-    collection: "users"
-});
+    collection: "users",
+  },
+);
 
-
+// ===| Indexes |──────────────────────────────────────────────────────────────────
+userSchema.index({ username: "text", displayName: "text" });
+userSchema.index({ isOnline: 1, lastSeen: -1 });
+userSchema.index({ role: 1 });
 
 // ===| Model |─────────────────────────────────────────────────────────────────
 const User = mongoose.model<IUser>("User", userSchema);
