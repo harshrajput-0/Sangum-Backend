@@ -53,7 +53,8 @@ const socialLinksSchema = new Schema<ISocialLinks>({
   linkedIn: { type: String, trim: true },
   twitter: { type: String, trim: true },
   website: { type: String, trim: true },
-});
+},
+{ _id: false });
 
 const badgeSchema = new Schema<IBadge>({
   types: {
@@ -65,7 +66,8 @@ const badgeSchema = new Schema<IBadge>({
     type: Date,
     default: Date.now(),
   },
-});
+},
+{ _id: false });
 
 const userSchema = new Schema<IUser>(
   {

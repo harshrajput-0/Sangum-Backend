@@ -20,7 +20,7 @@ export interface IUserStat {
 }
 
 // ===| Schema |─────────────────────────────────────────────────────────────────
-const userStatSchema = new Schema<IUserStat>(
+const userStatsSchema = new Schema<IUserStat>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -85,6 +85,11 @@ const userStatSchema = new Schema<IUserStat>(
   },
 );
 
+
+// ===| Indexes |──────────────────────────────────────────────────────────────────
+userStatsSchema.index({ reputationScore: -1 });
+userStatsSchema.index({ followersCount: -1 });
+
 // ===| Model |─────────────────────────────────────────────────────────────────
-const UserStats = mongoose.model<IUserStat>("UserStats", userStatSchema);
+const UserStats = mongoose.model<IUserStat>("UserStats", userStatsSchema);
 export default UserStats;
