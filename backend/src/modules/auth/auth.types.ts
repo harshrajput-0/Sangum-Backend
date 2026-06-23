@@ -16,3 +16,8 @@ export interface AuthUserResponse {
     isVerified: boolean,
     hasEmail: boolean,
 }
+
+export interface AuthResponse {
+    user: AuthUserResponse;
+    accessToken: string;
+}

@@ -1,12 +1,12 @@
 class ApiResponse<T> {
-  success: boolean;
+  public success = true;
 
   constructor(
     public statusCode: number,
     public data: T,
     public message: string = "Success"
   ) {
-    this.success = statusCode < 400;
+    // this.success = statusCode < 400;            // Onely if ApiError handles both response and error
   }
 }
 

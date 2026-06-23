@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
-import { AuthUserResponse } from "./auth.types";
+import { AuthResponse, AuthUserResponse } from "./auth.types";
+import * as authRepository from "./auth.repository"
+import ApiError from "../../utils/ApiError";
 
 // Token hashing
 const hashToken = (token:string): string => crypto.createHash("sha256").update(token).digest("hex");
@@ -21,3 +23,9 @@ const toAuthUserResponse = (user: any, account: any): AuthUserResponse => ({
     hasEmail: account.hasEmail,
 })
     
+
+
+// ============================================================
+// ------------| REGISTERATION : Email + Password |------------
+// ============================================================
+
