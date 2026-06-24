@@ -85,7 +85,6 @@ const userStatsSchema = new Schema<IUserStat>(
   },
 );
 
-
 // ===| Indexes |──────────────────────────────────────────────────────────────────
 userStatsSchema.index({ reputationScore: -1 });
 userStatsSchema.index({ followersCount: -1 });
