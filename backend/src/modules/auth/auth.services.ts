@@ -13,7 +13,6 @@ import {
 } from "../../utils/generateTokens";
 
 import { env } from "../../config/env";
-import { throwDeprecation } from "process";
 
 // Token hashing
 const hashToken = (token: string): string =>
@@ -249,7 +248,7 @@ try {
 };
 
 // find account
-const account = authRepository.findByUserId(payload.userId);
+const account = await authRepository.findByUserId(payload.userId);
 
 // if acount doesn't have refreshToken then session not found
 if(!account || !account.refreshToken ){
