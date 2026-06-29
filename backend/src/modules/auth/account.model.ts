@@ -22,7 +22,7 @@ export interface IAccount extends Document {
   userId: Types.ObjectId;
   email?: string;
   password?: string; // Because OAuth accounts don't have password
-  authProviders: IOAuthProvider;
+  authProviders: IOAuthProvider[];
 
   isVerified: boolean;
   isActive: boolean;

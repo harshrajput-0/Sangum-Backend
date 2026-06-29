@@ -5,7 +5,7 @@ export const Footer: React.FC = () => {
     <footer className="border-t border-[#2A3441] py-10 px-6">
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Logo + brand */}
-        <div className="flex items-center gap-2.5 bg-amber-200">
+        <div className="flex items-center gap-2.5 ">
          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 277 64" width="180"  role="img" aria-label="Sangum">
   <title>Sangum</title>
   <defs>
