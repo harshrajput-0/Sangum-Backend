@@ -9,9 +9,11 @@ import {
   generateRefreshToken,
   AccessTokenPayload,
   RefreshTokenPayload,
+  verifyRefreshToken,
 } from "../../utils/generateTokens";
 
 import { env } from "../../config/env";
+import { throwDeprecation } from "process";
 
 // Token hashing
 const hashToken = (token: string): string =>
@@ -222,19 +224,63 @@ export const loginUser = async (email: string, password: string) => {
 // ============================================================
 // -------------------| LOGOUT CONTROLLER |--------------------
 // ============================================================
+export const logoutUser = async (userId: string) => {
+// Getting account
+const account = await authRepository.findByUserId(userId);
 
-// Getting account and clear refreshToken
+// Clear refreshToken of that account
+if(account){
+  await authRepository.clearRefreshToken(account._id.toString());
+}
+}
 
 // ============================================================
 // -----------------| REFRESH ACCESS TOKEN |-------------------
 // ============================================================
-
+export const refreshAccessToken = async (refreshToken: string) => {
 // initialize payload
+let payload;
+
 // check refresh token, if not unauthorized
+try {
+  payload = verifyRefreshToken(refreshToken);
+} catch (error) {
+  throw ApiError.unauthorized("Invalid or expired refresh token");
+};
+
 // find account
-// if acount doesn't have refreshToken then session not foun
+const account = authRepository.findByUserId(payload.userId);
+
+// if acount doesn't have refreshToken then session not found
+if(!account || !account.refreshToken ){
+  throw ApiError.unauthorized("Session not found. Please login again");
+};
+
 // incoming Hash(resfreshToken)
+const incomingRefreshToken = hashToken(refreshToken);
+
 // compare with account token, if not session expired
+if(incomingRefreshToken !== account.refreshToken){
+  throw ApiError.unauthorized("Invalid session. Please login again");
+};
+
 // find user wiht accountUserId, then internal
-// generat new Token both
+const user = await User.findById(account.userId);
+
+if(!user){
+  throw ApiError.internal("User profile is missing for this user")
+}
+
+// Generate both tokens
+const newAccessToken =  generateAccessToken({ userId: user._id.toString(), role: user.role });
+const newRefreshToken =  generateRefreshToken({ userId: user._id.toString() });
+
 // update the refresh Token
+await authRepository.updateRefreshToken(account._id.toString(), hashToken(newRefreshToken));
+
+return {
+  user: toAuthUserResponse(user, account),
+  accessToken: newAccessToken,
+  refreshToken: newRefreshToken,
+};
+}
