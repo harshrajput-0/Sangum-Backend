@@ -4,12 +4,12 @@ import { env } from "../config/env";
 
 // ======| PAYLOAD INTERFACE |======
 export interface AccessTokenPayload {
-  token: string;
+  userId: string;
   role: UserRole;
 }
 
 export interface RefreshTokenPayload {
-  token: string;
+  userId: string;
 }
 
 // Generate Access Token

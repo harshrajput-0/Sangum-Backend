@@ -7,6 +7,8 @@ dotenv.config();
 const envSchema = z.object({
     NODE_ENV: z.enum(["development", "production"]).default("development"),
     PORT: z.string().default("3000"),
+    CLIENT_URL: z.string().url(),
+
     MONGO_URI: z.string(),
 
 

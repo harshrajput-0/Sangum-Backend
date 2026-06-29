@@ -4,7 +4,14 @@ import { AuthResponse, AuthUserResponse } from "./auth.types";
 import * as authRepository from "./auth.repository";
 import ApiError from "../../utils/ApiError";
 import User, { UserRole } from "../users/user.model";
-import { RefreshTokenPayload } from "../../utils/generateTokens";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  AccessTokenPayload,
+  RefreshTokenPayload,
+} from "../../utils/generateTokens";
+
+import { env } from "../../config/env";
 
 // Token hashing
 const hashToken = (token: string): string =>
@@ -41,23 +48,32 @@ export const registerUser = async (
     throw ApiError.conflict("An account with this email already exist");
   }
 
+  // BUG FIX - session start
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     // Creating userId and accountId to make it work
-    const userId = new mongoose.Schema.Types.ObjectId();
-    const accountId = new mongoose.Schema.Types.ObjectId();
+    const userId = new mongoose.Types.ObjectId();
+    const accountId = new mongoose.Types.ObjectId();
 
     // Creating User
-    const user = await User.create(
-      {
-        _id: userId,
-        accountId,
-        username: `user_${crypto.randomBytes(5).toString("hex")}`,
-        displayName: email.split("@")[0],
-        role: UserRole.USER,
-        isProfileComplete: false,
-      },
+    const [user] = await User.create(
+      [
+        {
+          _id: userId,
+          accountId,
+          username: `user_${crypto.randomBytes(5).toString("hex")}`,
+          displayName: email.split("@")[0] ?? email, // Bug fix fall back
+          role: UserRole.USER,
+          isProfileComplete: false,
+        },
+      ],
       { session },
     );
+
+    // Fix Applied for - "user" possibly undefined error
+    if (!user) throw ApiError.internal("Failed to create user");
 
     // Creating account
     const account = await authRepository.createAccount(
@@ -68,17 +84,22 @@ export const registerUser = async (
         password,
         authProviders: [],
         isVerified: false,
-      } as any,
+      },
       session,
     );
 
-    // Creating userStats
-    const userStats = await authRepository.createAccount(
-      [{ userId: user[0]._id }],
-      { session },
-    );
+    // Fix Applied for - "account" possibly undefined error
+    if (!account) throw ApiError.internal("Failed to create account");
 
-    await session.commitTransation();
+    // Creating userStats
+    const userStats = await authRepository.createUserStats(
+      [{ userId: user._id }],
+      session,
+    );
+    // Fix Applied for - "userStats" possibly undefined error
+    if (!userStats) throw ApiError.internal("Failed to create user stats");
+
+    await session.commitTransaction();
 
     // generateRandomToken
     const rawToken = generateRandomToken();
@@ -101,16 +122,17 @@ export const registerUser = async (
     queueEmail({
       type: "welcome",
       to: email,
-      data: { displayName: user[0].displayName },
+      data: { displayName: user.displayName },
     });
 
     // Generate accessToken and refreshToken
-    const accessToken = generateRandomToken({
-      userId: user[0]._id.toString(),
-      role: user[0].role,
+    const accessToken = generateAccessToken({
+      userId: user._id.toString(),
+      role: user.role,
     });
-    const refreshToken = generateRandomToken({
-      userId: user[0]._id.toString(),
+
+    const refreshToken = generateRefreshToken({
+      userId: user._id.toString(),
     });
 
     // Updating refresToken
@@ -120,7 +142,7 @@ export const registerUser = async (
     );
 
     return {
-      user: toAuthUserResponse(user[0], account),
+      user: toAuthUserResponse(user, account),
       accessToken,
     } as AuthResponse & { refreshToken: string } as any;
   } catch (error) {
@@ -174,12 +196,12 @@ export const loginUser = async (email: string, password: string) => {
     throw ApiError.internal("The user profile is missing for this account");
   }
 
-  // Generate access and refresh Token
-  const accessToken = await generateRandomToken({
+  // Generate access and refresh To
+  const accessToken = await generateAccessToken({
     userId: user._id.toString(),
     role: user.role,
   });
-  const refreshToken = await generateRandomToken({
+  const refreshToken = await generateRefreshToken({
     userId: user._id.toString(),
   });
 
@@ -201,3 +223,18 @@ export const loginUser = async (email: string, password: string) => {
 // -------------------| LOGOUT CONTROLLER |--------------------
 // ============================================================
 
+// Getting account and clear refreshToken
+
+// ============================================================
+// -----------------| REFRESH ACCESS TOKEN |-------------------
+// ============================================================
+
+// initialize payload
+// check refresh token, if not unauthorized
+// find account
+// if acount doesn't have refreshToken then session not foun
+// incoming Hash(resfreshToken)
+// compare with account token, if not session expired
+// find user wiht accountUserId, then internal
+// generat new Token both
+// update the refresh Token

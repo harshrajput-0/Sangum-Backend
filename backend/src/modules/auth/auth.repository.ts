@@ -3,6 +3,8 @@ import Account, {
   IOAuthProvider,
   AuthProvider,
 } from "./account.model";
+import UserStats from "../users/userStat.model";
+import mongoose, { ClientSession } from "mongoose";
 
 // find by email
 export const findByEmail = (email: string) => {
@@ -29,8 +31,18 @@ export const findByOAuthProvider = (
 };
 
 // Create Account
-export const createAccount = (data: Partial<IAccount>) => {
-  return Account.create(data);
+export const createAccount = async (data: Partial<IAccount>, session?: ClientSession) => {
+  const [account] = await Account.create([data], {session: session ?? null});
+  return account;
+};
+
+// Create userStats
+export const createUserStats = async (
+  data: { userId: mongoose.Types.ObjectId }[],
+  session?: ClientSession,
+) => {
+  const [stats] = await UserStats.create(data, { session: session ?? null });
+  return stats;
 };
 
 // Update Refresh Token using hashedToken
