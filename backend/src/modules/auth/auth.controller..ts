@@ -9,6 +9,7 @@ import { IAccount } from "./account.model";
 import { IUser } from "../users/user.model";
 import { env } from "../../config/env";
 import { access } from "node:fs";
+import { clearRefreshToken } from "./auth.repository";
 
 
 const REFRESH_COOKIE_NAME = "sangum_refresh_token";
@@ -21,4 +22,75 @@ const setRefreshCookie = (res: Response, token: string) => {
     });
 };
 
+
+// ============================================================
+// ------------------| LOCAL AUTHENTICAITON |------------------
+// ============================================================
+
+export const register = asyncHandler( async (req: Request, res: Response) => {
+    // get email and password
+    const { email, password } = req.body;
+
+    // Call registerUser funtion in auth.service.ts 
+    const result = await authService.registerUser(email, password);
+
+    // setCookies using refreshToken
+    setRefreshCookie(res, result.refreshToken);
+
+    // return response
+    res.status(201).json(new ApiResponse(201, "Account created successfully", {
+        user: result.user,
+        accessToken: result.accessToken,
+    }));
+});
+
+export const login = asyncHandler( async (req: Request, res: Response) => {
+    // Get email and password
+    const { email, password } = req.body;
+
+    // Call loginUser funtion in auth.service.ts 
+    const result = await authService.loginUser(email, password);
+
+    // setCookies using refreshToken
+    setRefreshCookie(res, result.refreshToken);
+
+    // return response
+    res.status(200).json(new ApiResponse(200, "User login successfully", {
+        user: result.user,
+        accessToken: result.accessToken
+    }))
+});
+
+export const logout = asyncHandler( async (req: Request, res: Response) => {
+    // Call logoutUser funtion in auth.service.ts 
+    await authService.logoutUser(req.user?.userId);
+
+    // clear refreshToken
+    clearRefreshToken(res);
+
+    // return response
+    res.status(200).json(new ApiResponse(200, "User logout successfully", null));
+});
+
+export const refreshToken = asyncHandler( async (req: Request, res: Response) => {
+    // Get refreshToken
+    const token = req.cookies[REFRESH_COOKIE_NAME];
+
+    // Check, if not unauthorized
+    if(!token){
+        throw ApiError.unauthorized("No refresh token provided");
+    }
+
+    // Call refreshAccessToken funtion in auth.service.ts 
+    const result = await authService.refreshAccessToken(token);
+
+    // setCookies using refreshToken
+    setRefreshCookie(res, token.refreshToken);
+
+    // return response
+    res.status(200).json(new ApiResponse(200, "Token Refreshed", {
+        user: result.user,
+        accessToken: result.accessToken,
+    }));
+});
 

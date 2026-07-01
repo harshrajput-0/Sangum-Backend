@@ -1,5 +1,6 @@
 import { UserRole } from "../users/user.model";
 import { AuthProvider } from "./account.model";
+import { AccessTokenPayload } from "../../utils/generateTokens"; // adjust path if wrong
 
 //===| Request Payloads |---------------------------------------------------
 export interface RegisterPayload {
@@ -41,4 +42,14 @@ export interface AuthUserResponse {
 export interface AuthResponse {
   user: AuthUserResponse;
   accessToken: string;
+  refreshToken: string;
+}
+
+//===| Express Augmentation |------------------------------------------------
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AccessTokenPayload;
+    }
+  }
 }

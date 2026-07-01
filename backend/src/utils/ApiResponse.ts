@@ -3,8 +3,8 @@ class ApiResponse<T> {
 
   constructor(
     public statusCode: number,
+    public message: string = "Success",
     public data: T,
-    public message: string = "Success"
   ) {
     // this.success = statusCode < 400;            // Onely if ApiError handles both response and error
   }

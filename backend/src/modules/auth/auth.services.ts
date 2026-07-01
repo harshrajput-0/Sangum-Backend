@@ -113,18 +113,18 @@ export const registerUser = async (
     );
 
     //
-    queueEmail({
-      type: "verification",
-      to: email,
-      data: { verifyUrl: `${env.CLIENT_URL}/verify-email/${rawToken}` },
-    });
+    // queueEmail({
+    //   type: "verification",
+    //   to: email,
+    //   data: { verifyUrl: `${env.CLIENT_URL}/verify-email/${rawToken}` },
+    // });
 
-    //
-    queueEmail({
-      type: "welcome",
-      to: email,
-      data: { displayName: user.displayName },
-    });
+    // //
+    // queueEmail({
+    //   type: "welcome",
+    //   to: email,
+    //   data: { displayName: user.displayName },
+    // });
 
     // Generate accessToken and refreshToken
     const accessToken = generateAccessToken({
