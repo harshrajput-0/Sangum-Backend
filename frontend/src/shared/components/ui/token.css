@@ -1,0 +1,148 @@
+:root {
+  /* ---- Brand (theme-invariant) ---- */
+  --brand-purple: #6d5dfe;
+  --brand-purple-dark: #5a4ae0;
+  --brand-purple-light: #8b7dff;
+  --brand-cyan: #14d8c4;
+  --brand-gradient: linear-gradient(
+    135deg,
+    #6d5dfe 0%,
+    #4f8ef7 50%,
+    #14d8c4 100%
+  );
+  --brand-gradient-cover: linear-gradient(135deg, #6d5dfe 0%, #3e7bfa 100%);
+
+  /* ---- Semantic colors (theme-invariant) ---- */
+  --success: #22c55e;
+  --success-bg-dark: rgba(34, 197, 94, 0.12);
+  --success-bg-light: rgba(34, 197, 94, 0.1);
+  --warning: #f59e0b;
+  --warning-bg-dark: rgba(245, 158, 11, 0.12);
+  --warning-bg-light: rgba(245, 158, 11, 0.1);
+  --danger: #ef4444;
+  --danger-bg-dark: rgba(239, 68, 68, 0.12);
+  --danger-bg-light: rgba(239, 68, 68, 0.1);
+  --info: #3b82f6;
+  --info-bg-dark: rgba(59, 130, 246, 0.12);
+  --info-bg-light: rgba(59, 130, 246, 0.1);
+  --neutral: #6b7280;
+
+  /* ---- Role / badge colors (theme-invariant) ---- */
+  --role-admin: #6d5dfe;
+  --role-moderator: #22c55e;
+  --role-verified: #3b82f6;
+  --role-user: #9aa3af;
+
+  /* ---- Reaction colors ---- */
+  --reaction-like: #6d5dfe;
+  --reaction-love: #ef4444;
+  --reaction-insightful: #f59e0b;
+  --reaction-funny: #fbbf24;
+  --reaction-celebrate: #22c55e;
+  --reaction-support: #14b8a6;
+
+  /* ---- Radius scale ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ---- Spacing scale ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* ---- Typography ---- */
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-md: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+  --fs-4xl: 38px;
+
+  /* ---- Shadows (dark-theme defaults; redefined under [data-theme="light"]) ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-glow-purple: 0 0 0 3px rgba(109, 93, 254, 0.25);
+
+  /* ---- Layout constants ---- */
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 76px;
+  --topbar-h: 64px;
+  --admin-sidebar-w: 248px;
+  --right-panel-w: 320px;
+  --container-max: 1280px;
+
+  /* ---- Transition ---- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 120ms var(--ease);
+  --t-base: 200ms var(--ease);
+}
+
+/* ============================================================
+   DARK THEME (default)
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  --bg: #0a0d0f;
+  --bg-elevated: #0e1216;
+  --surface: #161c23;
+  --surface-2: #1b222b;
+  --surface-hover: #1d2530;
+  --border: #2a3441;
+  --border-strong: #384455;
+  --text: #fffdfc;
+  --text-secondary: #c5c7cb;
+  --text-muted: #959698;
+  --text-on-brand: #ffffff;
+  --overlay: rgba(5, 7, 9, 0.72);
+  --input-bg: #11161b;
+  --scrollbar: #2a3441;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================
+   LIGHT THEME
+   ============================================================ */
+[data-theme="light"] {
+  --bg: #f6f7f9;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #fafbfc;
+  --surface-hover: #f1f3f6;
+  --border: #e3e7ed;
+  --border-strong: #cbd2dc;
+  --text: #11151a;
+  --text-secondary: #4b5565;
+  --text-muted: #8a94a6;
+  --text-on-brand: #ffffff;
+  --overlay: rgba(17, 21, 26, 0.45);
+  --input-bg: #ffffff;
+  --scrollbar: #e3e7ed;
+  --shadow-sm: 0 1px 2px rgba(17, 21, 26, 0.06);
+  --shadow-md: 0 4px 16px rgba(17, 21, 26, 0.08);
+  --shadow-lg: 0 16px 40px rgba(17, 21, 26, 0.12);
+
+  /* badge tint backgrounds need lighter alpha on white */
+  --success-bg-dark: var(--success-bg-light);
+  --warning-bg-dark: var(--warning-bg-light);
+  --danger-bg-dark: var(--danger-bg-light);
+  --info-bg-dark: var(--info-bg-light);
+}
