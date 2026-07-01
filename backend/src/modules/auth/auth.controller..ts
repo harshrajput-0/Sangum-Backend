@@ -5,10 +5,7 @@ import ApiError from "../../utils/ApiError";
 import * as authService from "./auth.services";
 
 import { Request, Response } from "express";
-import { IAccount } from "./account.model";
-import { IUser } from "../users/user.model";
 import { env } from "../../config/env";
-import { access } from "node:fs";
 import { clearRefreshToken } from "./auth.repository";
 
 
@@ -62,11 +59,17 @@ export const login = asyncHandler( async (req: Request, res: Response) => {
 });
 
 export const logout = asyncHandler( async (req: Request, res: Response) => {
+    // FIX GUARD
+    if(!req.user){
+        throw ApiError.unauthorized("Not authenticated");
+    }
+
+
     // Call logoutUser funtion in auth.service.ts 
     await authService.logoutUser(req.user?.userId);
 
     // clear refreshToken
-    clearRefreshToken(res);
+    await clearRefreshToken(req.user.userId);
 
     // return response
     res.status(200).json(new ApiResponse(200, "User logout successfully", null));

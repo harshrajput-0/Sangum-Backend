@@ -16,9 +16,9 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction) =
         req.user = verifyAccessToken(token);
         next()
     } catch (error) {
-        logger.debug({error}, "Token Verification failed")
+        logger.debug("Token Verification failed", {error})
         next(ApiError.unauthorized("Invalid or expired access token"))
-    }
+    };
 
 };
 
