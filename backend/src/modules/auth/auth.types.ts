@@ -53,3 +53,12 @@ declare global {
     }
   }
 }
+
+//===| Normalise OAuthResponse |------------------------------------------------
+export interface OAuthProfile{
+  provider: AuthProvider;
+  providerId: string;
+  email: string | null;
+  displayName: string;
+  avatar: string | null;
+}
