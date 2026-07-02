@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
-import { AuthResponse, AuthUserResponse } from "./auth.types";
+import { AuthResponse, AuthUserResponse, OAuthProfile } from "./auth.types";
 import * as authRepository from "./auth.repository";
 import ApiError from "../../utils/ApiError";
 import User, { UserRole } from "../users/user.model";
@@ -13,6 +13,7 @@ import {
 } from "../../utils/generateTokens";
 
 import { env } from "../../config/env";
+import UserStats from "../users/userStat.model";
 
 // Token hashing
 const hashToken = (token: string): string =>
@@ -37,7 +38,6 @@ const toAuthUserResponse = (user: any, account: any): AuthUserResponse => ({
 // ============================================================
 // ------------| REGISTERATION : Email + Password |------------
 // ============================================================
-
 export const registerUser = async (
   email: string,
   password: string,
@@ -224,62 +224,227 @@ export const loginUser = async (email: string, password: string) => {
 // -------------------| LOGOUT CONTROLLER |--------------------
 // ============================================================
 export const logoutUser = async (userId: string) => {
-// Getting account
-const account = await authRepository.findByUserId(userId);
+  // Getting account
+  const account = await authRepository.findByUserId(userId);
 
-// Clear refreshToken of that account
-if(account){
-  await authRepository.clearRefreshToken(account._id.toString());
-}
-}
+  // Clear refreshToken of that account
+  if (account) {
+    await authRepository.clearRefreshToken(account._id.toString());
+  }
+};
 
 // ============================================================
 // -----------------| REFRESH ACCESS TOKEN |-------------------
 // ============================================================
 export const refreshAccessToken = async (refreshToken: string) => {
-// initialize payload
-let payload;
+  // initialize payload
+  let payload;
 
-// check refresh token, if not unauthorized
-try {
-  payload = verifyRefreshToken(refreshToken);
-} catch (error) {
-  throw ApiError.unauthorized("Invalid or expired refresh token");
+  // check refresh token, if not unauthorized
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch (error) {
+    throw ApiError.unauthorized("Invalid or expired refresh token");
+  }
+
+  // find account
+  const account = await authRepository.findByUserId(payload.userId);
+
+  // if acount doesn't have refreshToken then session not found
+  if (!account || !account.refreshToken) {
+    throw ApiError.unauthorized("Session not found. Please login again");
+  }
+
+  // incoming Hash(resfreshToken)
+  const incomingRefreshToken = hashToken(refreshToken);
+
+  // compare with account token, if not session expired
+  if (incomingRefreshToken !== account.refreshToken) {
+    throw ApiError.unauthorized("Invalid session. Please login again");
+  }
+
+  // find user wiht accountUserId, then internal
+  const user = await User.findById(account.userId);
+
+  if (!user) {
+    throw ApiError.internal("User profile is missing for this user");
+  }
+
+  // Generate both tokens
+  const newAccessToken = generateAccessToken({
+    userId: user._id.toString(),
+    role: user.role,
+  });
+  const newRefreshToken = generateRefreshToken({ userId: user._id.toString() });
+
+  // update the refresh Token
+  await authRepository.updateRefreshToken(
+    account._id.toString(),
+    hashToken(newRefreshToken),
+  );
+
+  return {
+    user: toAuthUserResponse(user, account),
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
 };
 
-// find account
-const account = await authRepository.findByUserId(payload.userId);
+export const handleOAuthLogin = async (profile: OAuthProfile) => {
+  // CASE 1 - Retruning user
 
-// if acount doesn't have refreshToken then session not found
-if(!account || !account.refreshToken ){
-  throw ApiError.unauthorized("Session not found. Please login again");
+  // find account
+  const account = await authRepository.findByOAuthProvider(
+    profile.provider,
+    profile.providerId,
+  );
+
+  if (account) {
+    // if true -> find using user profile -> if not handle it
+    const user = await User.findById(account.userId);
+    if (!user) {
+      throw ApiError.internal("User profile is missing for this account");
+    }
+
+    // generate token and update
+    const accessToken = generateAccessToken({
+      userId: user._id.toString(),
+      role: user.role,
+    });
+    const refreshToken = generateRefreshToken({
+      userId: user._id.toString(),
+    });
+    await authRepository.updateRefreshToken(
+      account._id.toString(),
+      hashToken(refreshToken),
+    );
+
+    // return users and tokens
+    return {
+      user: toAuthUserResponse(user, account),
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  // ===[ CASE 2 - Linking to existing user acount ]-----------------------------
+  if (profile.email) {
+    // check profile email and find account
+    const account = await authRepository.findByEmail(profile.email);
+
+    // add OAuthProvider
+    if (account) {
+      await authRepository.addOAuthProvider(account._id.toString(), {
+        provider: profile.provider,
+        providerId: profile.providerId,
+        connectedAt: new Date(),
+      });
+
+      // if account email is not verified then verify it OAuth provides verification
+      if (!account.isVerified) {
+        await authRepository.markEmailVerified(account._id.toString());
+      }
+
+      // find account using user profile -> if not handle it
+      const user = await User.findById(account.userId);
+      if (!user) {
+        throw ApiError.internal("User profile is missing for this account");
+      }
+
+      // generate token and update
+      const accessToken = generateAccessToken({
+        userId: user._id.toString(),
+        role: user.role,
+      });
+      const refreshToken = generateRefreshToken({
+        userId: user._id.toString(),
+      });
+      await authRepository.updateRefreshToken(
+        account._id.toString(),
+        hashToken(refreshToken),
+      );
+
+      // return users and tokens
+      return {
+        user: toAuthUserResponse(user, account),
+        accessToken,
+        refreshToken,
+      };
+    }
+  }
+
+  // ===[ CASE 3 - Creating user ]---------------------------------
+  // start session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  // Creating three accounts, as in registerUser
+  try {
+    const userId = new mongoose.Types.ObjectId();
+    const accountId = new mongoose.Types.ObjectId();
+
+    // Create User
+    const [user] = await User.create(
+      [
+        {
+          _id: userId,
+          accountId,
+          username: `user_${crypto.randomBytes(5).toString("hex")}`,
+          displayName: profile.displayName,
+          role: UserRole.USER,
+          isProfileComplete: false,
+        },
+      ],
+      { session },
+    );
+    if (!user) throw ApiError.internal("Failed to create account");
+
+    const account = await authRepository.createAccount(
+      {
+        _id: accountId,
+        userId,
+        ...(profile.email ? { email: profile.email } : {}),
+        authProviders: [
+          {
+            provider: profile.provider,
+            providerId: profile.providerId,
+            connectedAt: new Date(),
+          },
+        ],
+
+        isVerified: !!profile.email,
+      },
+      session,
+    );
+
+    if (!account) throw ApiError.internal("Failed to create account");
+
+    await UserStats.create([{ userId: user._id }], { session });
+
+    await session.commitTransaction();
+
+    // generate token and update
+    const accessToken = generateAccessToken({
+      userId: user._id.toString(),
+      role: user.role,
+    });
+    const refreshToken = generateRefreshToken({ userId: user._id.toString() });
+    await authRepository.updateRefreshToken(
+      account._id.toString(),
+      hashToken(refreshToken),
+    );
+
+    // return user and tokens
+    return {
+      user: toAuthUserResponse(user, account),
+      accessToken,
+      refreshToken,
+    };
+    
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };
-
-// incoming Hash(resfreshToken)
-const incomingRefreshToken = hashToken(refreshToken);
-
-// compare with account token, if not session expired
-if(incomingRefreshToken !== account.refreshToken){
-  throw ApiError.unauthorized("Invalid session. Please login again");
-};
-
-// find user wiht accountUserId, then internal
-const user = await User.findById(account.userId);
-
-if(!user){
-  throw ApiError.internal("User profile is missing for this user")
-}
-
-// Generate both tokens
-const newAccessToken =  generateAccessToken({ userId: user._id.toString(), role: user.role });
-const newRefreshToken =  generateRefreshToken({ userId: user._id.toString() });
-
-// update the refresh Token
-await authRepository.updateRefreshToken(account._id.toString(), hashToken(newRefreshToken));
-
-return {
-  user: toAuthUserResponse(user, account),
-  accessToken: newAccessToken,
-  refreshToken: newRefreshToken,
-};
-}
