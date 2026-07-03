@@ -20,7 +20,7 @@ const steps: Step[] = [
     description: "UI/UX design and design system.",
   },
   {
-    label: "Frontend Development",
+    label: "Frontend and Development",
     status: "active",
     description: "Building the interface and interactions.",
   },
