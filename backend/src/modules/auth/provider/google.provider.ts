@@ -1,7 +1,7 @@
 import axios from "axios";
-import { AuthProvider } from "../account.model";
-import { OAuthProfile } from "../auth.types";
-import { env } from "../../../config/env";
+import { AuthProvider } from "../account.model.js";
+import { OAuthProfile } from "../auth.types.js";
+import { env } from "../../../config/env.js";
 
 
 // Goggle URL

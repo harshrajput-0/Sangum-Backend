@@ -1,19 +1,19 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
-import { AuthResponse, AuthUserResponse, OAuthProfile } from "./auth.types";
-import * as authRepository from "./auth.repository";
-import ApiError from "../../utils/ApiError";
-import User, { UserRole } from "../users/user.model";
+import { AuthResponse, AuthUserResponse, OAuthProfile } from "./auth.types.js";
+import * as authRepository from "./auth.repository.js";
+import ApiError from "../../utils/ApiError.js";
+import User, { UserRole } from "../users/user.model.js";
 import {
   generateAccessToken,
   generateRefreshToken,
   AccessTokenPayload,
   RefreshTokenPayload,
   verifyRefreshToken,
-} from "../../utils/generateTokens";
+} from "../../utils/generateTokens.js";
 
-import { env } from "../../config/env";
-import UserStats from "../users/userStat.model";
+import { env } from "../../config/env.js";
+import UserStats from "../users/userStat.model.js";
 
 // Token hashing
 const hashToken = (token: string): string =>
