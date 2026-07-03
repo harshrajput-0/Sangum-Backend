@@ -290,6 +290,10 @@ export const refreshAccessToken = async (refreshToken: string) => {
   };
 };
 
+
+// ============================================================
+// ---------------| HANDLE OAUTH LOGIN SERVICE |---------------
+// ============================================================
 export const handleOAuthLogin = async (profile: OAuthProfile) => {
   // CASE 1 - Retruning user
 
@@ -448,3 +452,34 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
     session.endSession();
   }
 };
+
+
+
+// ============================================================
+// ---------------------| COMPLETE Email |---------------------
+// ============================================================
+export const completeEmail = async (userId: string, email: string): Promise<void> => {
+  const emailExist = await authRepository.checkEmailExists(email);
+
+
+// check if email already exist, if yes conflict
+if (!emailExist) {
+  throw ApiError.conflict("An account with this email already exist");
+}
+
+//  find account usign id, if not -> not fount
+const account = await authRepository.findByUserId(userId);
+if (!account){
+  throw ApiError.notFound("Account not found");
+}
+
+// if account.haseamil not, bad request (account has email)
+if(!account.needEmail()){
+  throw ApiError.badRequest("This account already has an email register")
+}
+
+// set email with account and email
+await authRepository.setEmail(account._id.toString(), email);
+
+
+}
