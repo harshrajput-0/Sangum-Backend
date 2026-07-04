@@ -16,8 +16,8 @@ export const Hero: React.FC = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background glow blobs */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-150 h-120 bg-[#6D5DFE]/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 left-1/4 w-75 h-75 bg-[#14D8C4]/8 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-150 h-120 bg-brand-purple/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 left-1/4 w-75 h-75 bg-brand-cyan/8 rounded-full blur-[100px]" />
       </div>
 
       {/* Subtle grid overlay */}
@@ -25,25 +25,25 @@ export const Hero: React.FC = () => {
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
-            "linear-gradient(#FFFDFC 1px, transparent 1px), linear-gradient(90deg, #FFFDFC 1px, transparent 1px)",
+            "linear-gradient(var(--text) 1px, transparent 1px), linear-gradient(90deg, var(--text) 1px, transparent 1px)",
           backgroundSize: "60px 60px",
         }}
       />
 
       <div className="relative max-w-4xl mx-auto px-6 py-24 text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 mb-8 px-3.5 py-1.5 rounded-full border border-[#2A3441] bg-[#161C23] text-sm text-[#C5C7CB]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#14D8C4] animate-pulse" />
+        <div className="inline-flex items-center gap-2 mb-8 px-3.5 py-1.5 rounded-full border border-border bg-surface text-sm text-text-secondary">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse" />
           <span>Active development · Join the waitlist</span>
         </div>
 
         {/* Headline */}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-[#FFFDFC] leading-[1.08] tracking-tight mb-8">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-text leading-[1.08] tracking-tight mb-8">
           Where Communities{" "}
           <span
             className="relative inline-block pb-2"
             style={{
-              background: "linear-gradient(135deg, #6D5DFE 0%, #14D8C4 100%)",
+              background: "linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-cyan) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -54,11 +54,11 @@ export const Hero: React.FC = () => {
         </h1>
 
         {/* Description */}
-        <p className="max-w-xl mx-auto text-lg text-[#C5C7CB] leading-relaxed mb-10">
+        <p className="max-w-xl mx-auto text-lg text-text-secondary leading-relaxed mb-10">
           Sangam is a modern platform for communities, conversations,
           collaboration, and knowledge sharing.
           <br />
-          <span className="text-[#959698] text-base">
+          <span className="text-text-muted text-base">
             Currently in active development.
           </span>
         </p>
@@ -100,9 +100,9 @@ export const Hero: React.FC = () => {
               className="
                 flex-1 w-full sm:w-auto
                 px-4 py-2.5 rounded-lg text-sm
-                bg-[#161C23] border border-[#2A3441]
-                text-[#FFFDFC] placeholder:text-[#959698]
-                focus:outline-none focus:border-[#6D5DFE]
+                bg-surface border border-border
+                text-text placeholder:text-text-muted
+                focus:outline-none focus:border-brand-purple
                 transition-colors
               "
             />
@@ -111,7 +111,7 @@ export const Hero: React.FC = () => {
             </Button>
           </form>
         ) : (
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#161C23] border border-[#14D8C4]/40 text-[#14D8C4] text-sm">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-surface border border-brand-cyan/40 text-brand-cyan text-sm">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
@@ -119,13 +119,13 @@ export const Hero: React.FC = () => {
           </div>
         )}
 
-        <p className="mt-3 text-xs text-[#959698]">
+        <p className="mt-3 text-xs text-text-muted">
           No spam, we promise. Unsubscribe anytime.
         </p>
 
         {/* Social links */}
         <div className="mt-12 flex items-center justify-center gap-6">
-          <span className="text-xs text-[#959698] uppercase tracking-widest">Follow our progress</span>
+          <span className="text-xs text-text-muted uppercase tracking-widest">Follow our progress</span>
           <div className="flex items-center gap-3">
             {[
               {
@@ -151,7 +151,7 @@ export const Hero: React.FC = () => {
                 key={label}
                 href="#"
                 aria-label={label}
-                className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#2A3441] text-[#959698] hover:text-[#FFFDFC] hover:border-[#6D5DFE]/50 transition-all"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-muted hover:text-text hover:border-brand-purple/50 transition-all"
               >
                 <svg
                   className="w-4 h-4"

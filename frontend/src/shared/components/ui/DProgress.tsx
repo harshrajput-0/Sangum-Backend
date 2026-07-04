@@ -39,7 +39,7 @@ const steps: Step[] = [
 const StepIcon: React.FC<{ status: StepStatus; index: number }> = ({ status, index }) => {
   if (status === "done") {
     return (
-      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[#6D5DFE] border-2 border-[#6D5DFE] shrink-0">
+      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-brand-purple border-2 border-brand-purple shrink-0">
         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
         </svg>
@@ -48,14 +48,14 @@ const StepIcon: React.FC<{ status: StepStatus; index: number }> = ({ status, ind
   }
   if (status === "active") {
     return (
-      <div className="w-9 h-9 rounded-full flex items-center justify-center border-2 border-[#6D5DFE] bg-[#161C23] shrink-0 relative">
-        <div className="w-3 h-3 rounded-full bg-[#6D5DFE] animate-pulse" />
+      <div className="w-9 h-9 rounded-full flex items-center justify-center border-2 border-brand-purple bg-surface shrink-0 relative">
+        <div className="w-3 h-3 rounded-full bg-brand-purple animate-pulse" />
       </div>
     );
   }
   return (
-    <div className="w-9 h-9 rounded-full flex items-center justify-center border-2 border-[#2A3441] bg-[#161C23] shrink-0">
-      <span className="text-xs text-[#959698] font-medium">{index + 1}</span>
+    <div className="w-9 h-9 rounded-full flex items-center justify-center border-2 border-border bg-surface shrink-0">
+      <span className="text-xs text-text-muted font-medium">{index + 1}</span>
     </div>
   );
 };
@@ -66,13 +66,13 @@ export const Progress: React.FC = () => {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <p className="text-xs text-[#6D5DFE] uppercase tracking-[0.15em] font-medium mb-3">
+          <p className="text-xs text-brand-purple uppercase tracking-[0.15em] font-medium mb-3">
             Where we are
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-[#FFFDFC] tracking-tight mb-3">
+          <h2 className="text-3xl md:text-4xl font-bold text-text tracking-tight mb-3">
             Roadmap
           </h2>
-          <p className="text-[#C5C7CB]">
+          <p className="text-text-secondary">
             We're building in the open. Here's where things stand.
           </p>
         </div>
@@ -88,8 +88,8 @@ export const Progress: React.FC = () => {
                   <div
                     className={`w-px flex-1 my-1 ${
                       step.status === "done"
-                        ? "bg-[#6D5DFE]/50"
-                        : "bg-[#2A3441]"
+                        ? "bg-brand-purple/50"
+                        : "bg-border"
                     }`}
                     style={{ minHeight: "2rem" }}
                   />
@@ -102,29 +102,29 @@ export const Progress: React.FC = () => {
                   <span
                     className={`text-base font-semibold ${
                       step.status === "upcoming"
-                        ? "text-[#959698]"
-                        : "text-[#FFFDFC]"
+                        ? "text-text-muted"
+                        : "text-text"
                     }`}
                   >
                     {step.label}
                   </span>
                   {step.status === "done" && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#14D8C4]/10 border border-[#14D8C4]/25 text-[#14D8C4] font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-brand-cyan/10 border border-brand-cyan/25 text-brand-cyan font-medium">
                       Completed
                     </span>
                   )}
                   {step.status === "active" && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#6D5DFE]/15 border border-[#6D5DFE]/30 text-[#6D5DFE] font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-brand-purple/15 border border-brand-purple/30 text-brand-purple font-medium">
                       In Progress
                     </span>
                   )}
                   {step.status === "upcoming" && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#161C23] border border-[#2A3441] text-[#959698]">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-surface border border-border text-text-muted">
                       Upcoming
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-[#959698]">{step.description}</p>
+                <p className="text-sm text-text-muted">{step.description}</p>
               </div>
             </div>
           ))}

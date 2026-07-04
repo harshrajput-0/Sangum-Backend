@@ -11,11 +11,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "bg-[#6D5DFE] hover:bg-[#5a4de0] text-white border border-[#6D5DFE] hover:border-[#5a4de0]",
+    "bg-brand-purple hover:bg-brand-purple-dark text-white border border-brand-purple hover:border-brand-purple-dark",
   outline:
-    "bg-transparent text-[#FFFDC] border border-[#2A3441] hover:border-[#6D5DFE] hover:text-[#6D5DFE]",
+    "bg-transparent text-text border border-border hover:border-brand-purple hover:text-brand-purple",
   ghost:
-    "bg-transparent text-[#C5C7CB] border border-transparent hover:text-[#FFFDFC] hover:bg-[#161C23]",
+    "bg-transparent text-text-secondary border border-transparent hover:text-text hover:bg-surface",
 };
 
 const sizeStyles: Record<Size, string> = {
@@ -38,7 +38,7 @@ export const Button: React.FC<ButtonProps> = ({
         rounded-md font-medium
         transition-all duration-200
         cursor-pointer select-none
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D5DFE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0D0F]
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple focus-visible:ring-offset-2 focus-visible:ring-offset-bg
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variantStyles[variant]}
         ${sizeStyles[size]}

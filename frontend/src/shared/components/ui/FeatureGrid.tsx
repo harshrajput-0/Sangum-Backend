@@ -10,7 +10,7 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    accent: "#6D5DFE",
+    accent: "var(--brand-purple)",
     title: "Communities",
     description: "Create and join interest-based communities around topics you care about.",
     icon: (
@@ -22,7 +22,7 @@ const features: Feature[] = [
     ),
   },
   {
-    accent: "#14D8C4",
+    accent: "var(--brand-cyan)",
     title: "Discussions",
     description: "Share ideas and participate in meaningful conversations with your community.",
     icon: (
@@ -34,7 +34,7 @@ const features: Feature[] = [
     ),
   },
   {
-    accent: "#6D5DFE",
+    accent: "var(--brand-purple)",
     title: "Real-Time Chat",
     description: "Stay connected with live messaging that keeps your community in sync.",
     icon: (
@@ -46,7 +46,7 @@ const features: Feature[] = [
     ),
   },
   {
-    accent: "#14D8C4",
+    accent: "var(--brand-cyan)",
     title: "Knowledge Hub",
     description: "Discover, save, and share resources that help your community grow and learn.",
     icon: (
@@ -65,10 +65,10 @@ export const FeatureGrid: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-14">
-          <p className="text-xs text-[#6D5DFE] uppercase tracking-[0.15em] font-medium mb-3">
+          <p className="text-xs text-brand-purple uppercase tracking-[0.15em] font-medium mb-3">
             What we're building
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-[#FFFDFC] tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-bold text-text tracking-tight">
             Everything your community needs
           </h2>
         </div>
@@ -90,10 +90,10 @@ export const FeatureGrid: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-[#FFFDFC] font-semibold mb-1.5">
+                <h3 className="text-text font-semibold mb-1.5">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-[#C5C7CB] leading-relaxed">
+                <p className="text-sm text-text-secondary leading-relaxed">
                   {feature.description}
                 </p>
               </div>
