@@ -35,7 +35,7 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       className={`
         inline-flex items-center justify-center gap-2
-        rounded-lg font-medium
+        rounded-md font-medium
         transition-all duration-200
         cursor-pointer select-none
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D5DFE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0D0F]
