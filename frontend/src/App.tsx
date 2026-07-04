@@ -2,7 +2,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { LandingPage } from './modules/preview/LandingPage'
 import About from './modules/preview/About'
-import { Layout } from './shared/components/layout/TestLayout'
+import { Layout } from './layout/TestLayout'
 
 function App() {
   return (

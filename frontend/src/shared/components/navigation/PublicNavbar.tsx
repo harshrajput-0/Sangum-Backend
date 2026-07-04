@@ -53,32 +53,23 @@ export const Navbar: React.FC = () => {
 
         {/* Nav links — desktop */}
         <div className="hidden md:flex items-center gap-8 text-sm text-text-secondary justify-center">
-          <a href="#features" className="hover:text-text transition-colors">
-            Community
-          </a>
-          <a href="#progress" className="hover:text-text transition-colors">
-            Resources
-          </a>
-          <Link to="/about" className="hover:text-text transition-colors">About</Link>
-          <a href="#" className="hover:text-text transition-colors">
-            About
-          </a>
-          <a href="#" className="hover:text-text transition-colors">
-            Pricing
-          </a>
 
-          <a href="#" className="hover:text-text transition-colors">
-            Contact
-          </a>
+          <Link to="/community" className="hover:text-text transition-colors">Community</Link>
+          <Link to="/pricing" className="hover:text-text transition-colors">Pricing</Link>
+          <Link to="/legal" className="hover:text-text transition-colors">Legal</Link>
+          <Link to="/about" className="hover:text-text transition-colors">About</Link>
+          <Link to="/contact" className="hover:text-text transition-colors">Contact Us</Link>
         </div>
 
         <div className="flex items-center gap-2 justify-end">
+            <ThemeToggle />
+
           {/* Desktop */}
           <div className="hidden md:flex items-center gap-2">
-            <ThemeToggle />
             <Button variant="outline" size="sm">Login</Button>
             <Button size="sm">Register</Button>
           </div>
+          
 
           {/* Mobile hamburger */}
           <button
@@ -93,14 +84,15 @@ export const Navbar: React.FC = () => {
 
 
       {isMenuOpen && (
+        
         <div className="md:hidden border-t border-border bg-bg/95 backdrop-blur-md">
-          <div className="flex flex-col p-6 gap-5">
-            <a href="#features">Community</a>
-            <a href="#progress">Resources</a>
-            <a href="#about">About</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#contact">Contact</a>
-            <ThemeToggle />
+          
+          <div className="flex flex-col  gap-1">
+          <Link to="/community" className="p-4 text-text-secondary hover:bg-text/3 transition">Community</Link>
+          <Link to="/pricing" className="p-4 text-text-secondary hover:bg-text/3 transition">Pricing</Link>
+          <Link to="/legal" className="p-4 text-text-secondary hover:bg-text/3 transition">Legal</Link>
+          <Link to="/about" className="p-4 text-text-secondary hover:bg-text/3 transition">About</Link>
+          <Link to="/contact" className="p-4 text-text-secondary hover:bg-text/3 transition">Contact Us</Link>
             <div className="flex flex-col gap-3 pt-4">
               <Button variant="outline">Login</Button>
               <Button>Register</Button>
