@@ -24,5 +24,6 @@ dist-ssr
 *.sw?
 
 # Files
-layout
+layouts
 marketing
+hooks
