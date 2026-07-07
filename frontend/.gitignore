@@ -26,6 +26,7 @@ dist-ssr
 # Folders
 layouts
 hooks
+legal/
 
 # Files
 ContactPage.tsx

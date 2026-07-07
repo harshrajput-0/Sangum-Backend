@@ -6,7 +6,7 @@ import { PublicLayout } from './layouts/PublicLayout'
 import ContactPage from './modules/marketing/pages/ContactPage'
 
 import LegalHubPage from '@/modules/marketing/pages/LegalHubPage'
-import TermsPage from '@/modules/marketing/legal/TermsPage'
+import TermsPage from '@/modules/marketing/legal/TermsOfServicePage'
 import PrivacyPage from './modules/marketing/legal/PrivacyPolicyPage'
 import DisclaimerPage from './modules/marketing/legal/DisclaimerPage'
 import CookiePolicyPage from './modules/marketing/legal/CookiePolicyPage'
