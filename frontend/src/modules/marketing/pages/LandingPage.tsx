@@ -8,7 +8,7 @@ import { Progress } from "@/shared/components/ui/DProgress";
 
 export const LandingPage: React.FC = () => {
   return (
-    <div className=" bg-bg text-text">
+    <div>
         <Hero />
         <FeatureGrid />
         <Progress />
