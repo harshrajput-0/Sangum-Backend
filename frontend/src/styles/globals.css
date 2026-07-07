@@ -33,6 +33,10 @@
   /* ...rest of the theme-invariant tokens */
 }
 
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}
 :root,
 [data-theme="dark"] {
   --bg: #0a0d0f;
@@ -49,8 +53,8 @@
 }
 
 [data-theme="light"] {
-  --bg: #f6f7f9;
-  --bg-elevated: #ffffff;
+  --bg: #ffffff;
+  --bg-elevated: #f6f7f9;
   --surface: #ffffff;
   --surface-2: #fafbfc;
   --surface-hover: #f1f3f6;

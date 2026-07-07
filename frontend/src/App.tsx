@@ -1,8 +1,9 @@
 // src/App.tsx
 import { Routes, Route } from 'react-router-dom'
-import { LandingPage } from './modules/preview/LandingPage'
-import About from './modules/preview/About'
+import { LandingPage } from '@/modules/marketing/pages/LandingPage'
+import AboutPage from '@/modules/marketing/pages/AboutPage'
 import { PublicLayout } from './layouts/PublicLayout'
+
 
 import LegalLayout from '@/layouts/LegalLayout'
 import LegalHubPage from '@/modules/marketing/legal/LegalHubPage'
@@ -17,7 +18,7 @@ function App() {
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/about" element={<About />} />
+        <Route path="/about" element={<AboutPage />} />
         {/* catch-all 404 */}
         {/* <Route path="*" element={<NotFound />} /> */}
       </Route>

@@ -5,6 +5,7 @@
   --brand-purple-dark: #5a4ae0;
   --brand-purple-light: #8b7dff;
   --brand-cyan: #14d8c4;
+  --text: #a78bfa;
   --brand-gradient: linear-gradient(
     135deg,
     #6d5dfe 0%,
@@ -147,3 +148,4 @@
   --danger-bg-dark: var(--danger-bg-light);
   --info-bg-dark: var(--info-bg-light);
 }
+
