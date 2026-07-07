@@ -3,14 +3,17 @@ import { Routes, Route } from 'react-router-dom'
 import { LandingPage } from '@/modules/marketing/pages/LandingPage'
 import AboutPage from '@/modules/marketing/pages/AboutPage'
 import { PublicLayout } from './layouts/PublicLayout'
+import ContactPage from './modules/marketing/pages/ContactPage'
 
-
-import LegalLayout from '@/layouts/LegalLayout'
-import LegalHubPage from '@/modules/marketing/legal/LegalHubPage'
-import PrivacyPage from '@/modules/marketing/legal/PrivacyPage'
+import LegalHubPage from '@/modules/marketing/pages/LegalHubPage'
 import TermsPage from '@/modules/marketing/legal/TermsPage'
-import CookiesPage from '@/modules/marketing/legal/CookiesPage'
-import DisclaimerPage from '@/modules/marketing/legal/DisclaimerPage'
+import PrivacyPage from './modules/marketing/legal/PrivacyPolicyPage'
+import DisclaimerPage from './modules/marketing/legal/DisclaimerPage'
+import CookiePolicyPage from './modules/marketing/legal/CookiePolicyPage'
+import RegisterPage from './shared/hooks/RegisterPage'
+
+
+
 
 
 function App() {
@@ -18,18 +21,21 @@ function App() {
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* /legal, /legal/terms, /legal/privacy, /legal/disclaimer, /legal/cookies */}
+        <Route path="/legal">
+          <Route index element={<LegalHubPage />} />
+          <Route path="terms" element={<TermsPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="disclaimer" element={<DisclaimerPage />} />
+          <Route path="cookies" element={<CookiePolicyPage />} />
+        </Route>
+
         {/* catch-all 404 */}
         {/* <Route path="*" element={<NotFound />} /> */}
-      </Route>
-
-
-      <Route path="/legal" element={<LegalLayout />}>
-        <Route index element={<LegalHubPage />} />
-        <Route path="terms" element={<TermsPage />} />
-        <Route path="privacy" element={<PrivacyPage />} />
-        <Route path="cookies" element={<CookiesPage />} />
-        <Route path="disclaimer" element={<DisclaimerPage />} />
       </Route>
     </Routes>
   )

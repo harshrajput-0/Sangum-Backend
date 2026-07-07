@@ -1,18 +1,18 @@
-import asyncHandler from "../../utils/asyncHandler";
-import ApiResponse from "../../utils/ApiResponse";
-import ApiError from "../../utils/ApiError";
+import asyncHandler from "../../utils/asyncHandler.js";
+import ApiResponse from "../../utils/ApiResponse.js";
+import ApiError from "../../utils/ApiError.js";
 
-import * as authService from "./auth.services";
+import * as authService from "./auth.services.js";
 
 import { Request, Response } from "express";
-import { env } from "../../config/env";
-import { clearRefreshToken } from "./auth.repository";
+import { env } from "../../config/env.js";
+import { clearRefreshToken } from "./auth.repository.js";
 import crypto from "crypto";
 
 import {
   getGoogleAuthUrl,
   fetchGoogleProfile,
-} from "./provider/google.provider";
+} from "./provider/google.provider.js";
 
 const REFRESH_COOKIE_NAME = "sangum_refresh_token";
 

@@ -46,10 +46,10 @@ export default function AboutPage() {
     <div className="w-full">
       {/* Hero */}
       <section className="mx-auto max-w-[1280px] px-4 pt-[70px] pb-[50px] text-text bg-bg text-center md:px-6">
-        <span className="mb-3 block text-(length:--fs-xs)] font-bold uppercase tracking-[0.08em] text-brand-purple">
+        <span className="mb-3 block text-(length:--fs-xs) font-bold uppercase tracking-[0.08em] text-brand-purple">
           About Sangum
         </span>
-        <h1 className="mx-auto mb-4 max-w-[600px] text-[28px] font-bold leading-tight tracking-[-0.02em] text-text md:text-[38px]">
+        <h1 className="mx-auto mb-4 max-w-[600px] text-[28px] font-bold leading-tight tracking-[-0.02em] md:text-[38px]">
           Building the future of developer communities
         </h1>
         <p className="mx-auto max-w-[520px] text-(length:--fs-base)] text-text-secondary">

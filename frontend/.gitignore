@@ -23,7 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
-# Files
+# Folders
 layouts
-legal
 hooks
+
+# Files
+ContactPage.tsx
+LegalHubPage.tsx
+LegalArticleLayout.tsx
