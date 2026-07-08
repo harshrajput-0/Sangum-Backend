@@ -24,9 +24,9 @@ dist-ssr
 *.sw?
 
 # Folders
-hooks
 legal/
 
 # Files
 ContactPage.tsx
 LegalHubPage.tsx
+RegisterPage.tsx
