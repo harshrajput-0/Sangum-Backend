@@ -24,11 +24,9 @@ dist-ssr
 *.sw?
 
 # Folders
-layouts
 hooks
 legal/
 
 # Files
 ContactPage.tsx
 LegalHubPage.tsx
-LegalArticleLayout.tsx
