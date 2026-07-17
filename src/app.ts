@@ -1,5 +1,28 @@
-import express from "express";
+import express, { Application } from "express";
+import cors from "cors";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
 
-const app = express();
 
-export default app;
+import { env } from "./config/env.js";
+
+
+export const createApp = (): Application => {
+  const app = express();
+
+  app.use(helmet({
+    contentSecurityPolicy: false,        // All rendering is handle by nextjs, no server rendering
+  }));
+  app.use(
+    cors({
+      origin: env.CLIENT_URL,
+      credentials: true,              // required for the httpOnly refresh-token cookie to be sent cross-origin
+    }),
+  );
+
+  app.use(cookieParser());
+  app.use(express.json());
+
+  return app;
+};
+
