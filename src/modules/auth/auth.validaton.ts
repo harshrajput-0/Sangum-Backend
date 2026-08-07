@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// Password Validation 
 const passwordRule = z
   .string()
   .min(8, "Password must be of at least 8 characters")

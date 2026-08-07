@@ -20,6 +20,7 @@ export interface IOAuthProvider {
 export interface IAccount extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
+  
   email?: string;
   password?: string; // Because OAuth accounts don't have password
   authProviders: IOAuthProvider[];
