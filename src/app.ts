@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { env } from "./config/env.js";
 
 import authRoutes from "./modules/auth/auth.routes.js"
+import contactRoutes from "./modules/contact/contact.routes.js";
 
 
 export const createApp = (): Application => {
@@ -26,6 +27,8 @@ export const createApp = (): Application => {
   app.use(express.json());
 
   app.use(`/auth`, authRoutes)
+  app.use("/api/contact", contactRoutes);
+
 
   return app;
 };
