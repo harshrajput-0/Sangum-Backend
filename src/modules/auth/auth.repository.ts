@@ -2,8 +2,8 @@ import Account, {
   IAccount,
   IOAuthProvider,
   AuthProvider,
-} from "./account.model";
-import UserStats from "../users/userStat.model";
+} from "./account.model.js";
+import UserStats from "../users/userStat.model.js";
 import mongoose, { ClientSession } from "mongoose";
 
 // find by email

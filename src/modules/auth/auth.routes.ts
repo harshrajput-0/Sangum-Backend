@@ -7,9 +7,9 @@ import { registerSchema, loginSchema } from "./auth.validaton.js";
 
 const router = Router();
 
-router.post("register", validate(registerSchema), authController.register);
-router.post("login", validate(loginSchema), authController.login);
-router.post("register", authenticate, authController.logout);
+router.post("/register", validate(registerSchema), authController.register);
+router.post("/login", validate(loginSchema), authController.login);
+router.post("/logout", authenticate, authController.logout);
 
 
 // ====[ OAuth Authenticatioin]------------------------------------------

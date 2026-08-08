@@ -45,7 +45,7 @@ export const registerUser = async (
   const existing = await authRepository.findByEmail(email);
 
   // Checking if account exist
-  if (!existing) {
+  if (existing) {
     throw ApiError.conflict("An account with this email already exist");
   }
 
@@ -147,7 +147,9 @@ export const registerUser = async (
       accessToken,
     } as AuthResponse & { refreshToken: string } as any;
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     throw error;
   } finally {
     session.endSession();
@@ -289,7 +291,6 @@ export const refreshAccessToken = async (refreshToken: string) => {
     refreshToken: newRefreshToken,
   };
 };
-
 
 // ============================================================
 // ---------------| HANDLE OAUTH LOGIN SERVICE |---------------
@@ -444,7 +445,6 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
       accessToken,
       refreshToken,
     };
-    
   } catch (error) {
     await session.abortTransaction();
     throw error;
@@ -453,33 +453,31 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
   }
 };
 
-
-
 // ============================================================
 // ---------------------| COMPLETE Email |---------------------
 // ============================================================
-export const completeEmail = async (userId: string, email: string): Promise<void> => {
+export const completeEmail = async (
+  userId: string,
+  email: string,
+): Promise<void> => {
   const emailExist = await authRepository.checkEmailExists(email);
 
+  // check if email already exist, if yes conflict
+  if (!emailExist) {
+    throw ApiError.conflict("An account with this email already exist");
+  }
 
-// check if email already exist, if yes conflict
-if (!emailExist) {
-  throw ApiError.conflict("An account with this email already exist");
-}
+  //  find account usign id, if not -> not fount
+  const account = await authRepository.findByUserId(userId);
+  if (!account) {
+    throw ApiError.notFound("Account not found");
+  }
 
-//  find account usign id, if not -> not fount
-const account = await authRepository.findByUserId(userId);
-if (!account){
-  throw ApiError.notFound("Account not found");
-}
+  // if account.haseamil not, bad request (account has email)
+  if (!account.needEmail()) {
+    throw ApiError.badRequest("This account already has an email register");
+  }
 
-// if account.haseamil not, bad request (account has email)
-if(!account.needEmail()){
-  throw ApiError.badRequest("This account already has an email register")
-}
-
-// set email with account and email
-await authRepository.setEmail(account._id.toString(), email);
-
-
-}
+  // set email with account and email
+  await authRepository.setEmail(account._id.toString(), email);
+};
