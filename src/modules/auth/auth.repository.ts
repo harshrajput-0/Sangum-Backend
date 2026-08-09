@@ -13,7 +13,7 @@ export const findByEmail = (email: string) => {
 
 // find by userId
 export const findByUserId = (userId: string) => {
-  return Account.findOne({ userId });
+  return Account.findOne({ userId }).select("+refreshToken");
 };
 
 // find by accountId

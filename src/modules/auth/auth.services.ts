@@ -147,11 +147,11 @@ export const registerUser = async (
 
     return {
       user: toAuthUserResponse(user, account),
-      accessToken,
+      accessToken, refreshToken
       // refreshToken returned separately to the controller, which sets
       // it as a cookie — see auth.controller.ts → register
       // (not part of AuthResponse type because it never belongs in JSON)
-    } as AuthResponse & { refreshToken: string } as any;
+    } as AuthResponse ;
   } catch (error) {
     if (session.inTransaction()) {
       await session.abortTransaction();
@@ -257,6 +257,8 @@ export const refreshAccessToken = async (refreshToken: string) => {
 
   // find account
   const account = await authRepository.findByUserId(payload.userId);
+console.log("account:", account);
+console.log("has refreshToken field:", account?.refreshToken);
 
   // if acount doesn't have refreshToken then session not found
   if (!account || !account.refreshToken) {

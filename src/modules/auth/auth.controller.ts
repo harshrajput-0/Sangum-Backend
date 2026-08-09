@@ -20,7 +20,11 @@ const setRefreshCookie = (res: Response, token: string) => {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
+    sameSite: "lax",           // sent on top-level navigation (needed for OAuth redirects)
+    // domain: env.COOKIE_DOMAIN,      // Backend Domain
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",                    // only sent back to auth routes, not the whole API
+
   });
 };
 
@@ -96,7 +100,7 @@ export const refreshToken = asyncHandler(
     const result = await authService.refreshAccessToken(token);
 
     // setCookies using refreshToken
-    setRefreshCookie(res, token.refreshToken);
+    setRefreshCookie(res, result.refreshToken);
 
     // return response
     res.status(200).json(
@@ -171,7 +175,8 @@ export const oauthCallback = asyncHandler(
     const result = await authService.handleOAuthLogin(profile);
 
     // setRefreshCookie
-    setRefreshCookie(res, result.refreshToken);
+    console.log("setting refresh cookie, token:", result.refreshToken);
+setRefreshCookie(res, result.refreshToken);
 
     // response
     res.redirect(`${env.CLIENT_URL}/oauth/callback`);

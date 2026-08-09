@@ -29,7 +29,13 @@ export const createApp = (): Application => {
   app.use(cookieParser());
   app.use(express.json());
 
-  app.use(`/auth`, authRoutes);
+
+  const API_PREFIX = "/api/v1";
+
+  
+  app.use(`${API_PREFIX}/auth`, authRoutes);
+
+
   app.use("/api", contactRoutes);
   app.use("/api", waitlistRountes);
 

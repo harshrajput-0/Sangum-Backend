@@ -2,9 +2,6 @@ import axios from "axios";
 import { env } from "../../../config/env.js";
 import { AuthProvider } from "../account.model.js";
 import { OAuthProfile } from "../auth.types.js";
-import { application } from "express";
-import ApiError from "../../../utils/ApiError.js";
-import { string } from "zod";
 
 const GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize";
 const GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token";

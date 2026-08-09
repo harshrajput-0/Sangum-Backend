@@ -1,6 +1,6 @@
-import { UserRole } from "../users/user.model";
-import { AuthProvider } from "./account.model";
-import { AccessTokenPayload } from "../../utils/generateTokens"; // adjust path if wrong
+import { UserRole } from "../users/user.model.js";
+import { AuthProvider } from "./account.model.js";
+import { AccessTokenPayload } from "../../utils/generateTokens.js"; // adjust path if wrong
 
 //===| Request Payloads |---------------------------------------------------
 export interface RegisterPayload {
