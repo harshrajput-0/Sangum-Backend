@@ -7,7 +7,7 @@ const router = Router();
 
 
 router.post(
-  "/",
+  "/contact",
   validate(contactSchema),
   contactController.sendMessage
 );

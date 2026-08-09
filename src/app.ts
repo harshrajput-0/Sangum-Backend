@@ -8,6 +8,7 @@ import { env } from "./config/env.js";
 
 import authRoutes from "./modules/auth/auth.routes.js"
 import contactRoutes from "./modules/contact/contact.routes.js";
+import waitlistRountes from "./modules/waitlist/waitlist.routes.js"
 
 
 export const createApp = (): Application => {
@@ -27,7 +28,8 @@ export const createApp = (): Application => {
   app.use(express.json());
 
   app.use(`/auth`, authRoutes)
-  app.use("/api/contact", contactRoutes);
+  app.use("/api", contactRoutes);
+  app.use("/api", waitlistRountes)
 
 
   return app;
