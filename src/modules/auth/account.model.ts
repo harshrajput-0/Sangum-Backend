@@ -108,7 +108,7 @@ const accountSchema = new Schema<IAccount>(
 
     isActive: {
       type: Boolean,
-      default: false,
+      default: true,        // True, otherwise account will be deactive
     },
 
     refreshToken: {
@@ -185,7 +185,7 @@ accountSchema.pre("save", async function () {
 
 // ===| Methods |────────────────────────────────────────────────────────────────────
 // Compare Password
-accountSchema.methods.isPasswordCorrect = async function (password: string) {
+accountSchema.methods.comparePassword = async function (password: string) {
   return await bcrypt.compare(password, this.password);
 };
 
