@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import ApiError from "../utils/ApiError";
-import { verifyAccessToken } from "../utils/generateTokens";
-import { logger } from "../utils/logger";
+import ApiError from "../utils/ApiError.js";
+import { verifyAccessToken } from "../utils/generateTokens.js";
+import { logger } from "../utils/logger.js";
 
 export const authenticate = (
   req: Request,

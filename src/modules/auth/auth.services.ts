@@ -32,7 +32,7 @@ const toAuthUserResponse = (user: any, account: any): AuthUserResponse => ({
   role: user.role,
   isProfileComplete: user.isProfileComplete,
   isVerified: account.isVerified,
-  hasEmail: account.hasEmail(),
+  hasEmail: !account.needsEmail(),        // <-- frontend uses this to branch onboarding
 });
 
 // ============================================================
@@ -102,10 +102,13 @@ export const registerUser = async (
 
     await session.commitTransaction();
 
+    // Fire off verification email AFTER commit — never email the user
+    // about an account that might still roll back.
+
     // generateRandomToken
     const rawToken = generateRandomToken();
 
-    //
+    // Send email
     await authRepository.setEmailVerificationToken(
       account._id.toString(),
       hashToken(rawToken),
@@ -145,6 +148,9 @@ export const registerUser = async (
     return {
       user: toAuthUserResponse(user, account),
       accessToken,
+      // refreshToken returned separately to the controller, which sets
+      // it as a cookie — see auth.controller.ts → register
+      // (not part of AuthResponse type because it never belongs in JSON)
     } as AuthResponse & { refreshToken: string } as any;
   } catch (error) {
     if (session.inTransaction()) {
@@ -291,6 +297,10 @@ export const refreshAccessToken = async (refreshToken: string) => {
     refreshToken: newRefreshToken,
   };
 };
+
+// ============================================================
+// ----------------| FORGOT OR RESET PASSWORD |----------------
+// ============================================================
 
 // ============================================================
 // ---------------| HANDLE OAUTH LOGIN SERVICE |---------------
