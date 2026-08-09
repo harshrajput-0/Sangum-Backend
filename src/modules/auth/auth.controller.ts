@@ -9,10 +9,8 @@ import { env } from "../../config/env.js";
 import { clearRefreshToken } from "./auth.repository.js";
 import crypto from "crypto";
 
-import {
-  getGoogleAuthUrl,
-  fetchGoogleProfile,
-} from "./provider/google.provider.js";
+import {getGoogleAuthUrl,fetchGoogleProfile } from "./provider/google.provider.js";
+import { getGithubAuthUrl, fetchGithubProfile } from "./provider/github.provider.js";
 
 const REFRESH_COOKIE_NAME = "sangum_refresh_token";
 
@@ -20,11 +18,10 @@ const setRefreshCookie = (res: Response, token: string) => {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: "lax",           // sent on top-level navigation (needed for OAuth redirects)
-    // domain: env.COOKIE_DOMAIN,      // Backend Domain
+    sameSite: "lax", // sent on top-level navigation (needed for OAuth redirects)
+    // domain: env.COOKIE_DOMAIN,      //[Backend Domain]
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",                    // only sent back to auth routes, not the whole API
-
+    path: "/", // only sent back to auth routes, not the whole API
   });
 };
 
@@ -112,7 +109,11 @@ export const refreshToken = asyncHandler(
   },
 );
 
-type ProviderName = "google";
+// ============================================================
+// ------------| OAUTH CONTROLLERS |------------
+// ============================================================
+
+type ProviderName = "google" | "github";
 
 const providerMap: Record<
   ProviderName,
@@ -122,12 +123,11 @@ const providerMap: Record<
   }
 > = {
   google: { getAuthUrl: getGoogleAuthUrl, fetchProfile: fetchGoogleProfile },
+  github: { getAuthUrl: getGithubAuthUrl, fetchProfile: fetchGithubProfile },
 };
 
-export const oauthRedirect = asyncHandler(
-  async (req: Request, res: Response) => {
-    // get provider from param
-    const provider = req.params.provider as ProviderName;
+export const oauthRedirect = asyncHandler( async (req: Request, res: Response) => {
+    const provider = req.params.provider as ProviderName;                // get provider from param
 
     // mapprovider -> if not, badrequest (unsupported)
     if (!providerMap[provider]) {
@@ -151,8 +151,17 @@ export const oauthRedirect = asyncHandler(
   },
 );
 
-export const oauthCallback = asyncHandler(
-  async (req: Request, res: Response) => {
+
+
+/**
+ * GET /auth/oauth/:provider/callback
+ *
+ * Step 2. The provider redirects the browser HERE with ?code=... and
+ * ?state=.... We verify state, exchange the code for a profile (this
+ * is where github.provider.ts's email-fetching fix actually executes),
+ * then hand off to the SAME handleOAuthLogin() used for every provider.
+ */
+export const oauthCallback = asyncHandler( async (req: Request, res: Response) => {
     // provider
     const provider = req.params.provider as ProviderName;
 
@@ -176,7 +185,7 @@ export const oauthCallback = asyncHandler(
 
     // setRefreshCookie
     console.log("setting refresh cookie, token:", result.refreshToken);
-setRefreshCookie(res, result.refreshToken);
+    setRefreshCookie(res, result.refreshToken);
 
     // response
     res.redirect(`${env.CLIENT_URL}/oauth/callback`);
