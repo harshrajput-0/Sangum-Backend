@@ -10,6 +10,7 @@ const router = Router();
 router.post("/register", validate(registerSchema), authController.register);
 router.post("/login", validate(loginSchema), authController.login);
 router.post("/logout", authenticate, authController.logout);
+router.post("/refresh-token", authController.refreshToken);
 
 
 // ====[ OAuth Authenticatioin]------------------------------------------

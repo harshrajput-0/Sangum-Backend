@@ -12,7 +12,8 @@ export const authenticate = (
   const authHeader = req.headers.authorization;
   const [schema, token] = authHeader?.split(" ") ?? [];
 
-  if (schema !== "Bearer " || !token) {
+  // split(" ") returns "Bearer", not "Bearer ".
+  if (schema !== "Bearer" || !token) {
     return next(ApiError.unauthorized("No access token provided"));
   }
 
