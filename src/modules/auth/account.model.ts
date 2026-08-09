@@ -43,7 +43,7 @@ export interface IAccount extends Document {
   isLocked(): boolean;
   // Added for oauth system
   hasProvider(provider: AuthProvider): boolean;
-  needEmail(): boolean;
+  needsEmail(): boolean;
 
   incrementLoginAttempts(): Promise<void>;
   resetLoginAttempts(): Promise<void>;

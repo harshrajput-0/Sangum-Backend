@@ -9,8 +9,15 @@ import { env } from "../../config/env.js";
 import { clearRefreshToken } from "./auth.repository.js";
 import crypto from "crypto";
 
-import {getGoogleAuthUrl,fetchGoogleProfile } from "./provider/google.provider.js";
-import { getGithubAuthUrl, fetchGithubProfile } from "./provider/github.provider.js";
+import {
+  getGoogleAuthUrl,
+  fetchGoogleProfile,
+} from "./provider/google.provider.js";
+import {
+  getGithubAuthUrl,
+  fetchGithubProfile,
+} from "./provider/github.provider.js";
+import { string } from "zod";
 
 const REFRESH_COOKIE_NAME = "sangum_refresh_token";
 
@@ -110,6 +117,40 @@ export const refreshToken = asyncHandler(
 );
 
 // ============================================================
+// -------------------| EMAIL VERIFICATION |-------------------
+// ============================================================
+export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+  const { token } = req.params;
+
+  if (typeof token !== "string") {
+    res.status(400).json({ message: "Invalid verification token", });
+    return;
+  }
+
+  await authService.verifyEmail(token);
+
+  // This route is hit by the user clicking a link in their email, so we
+  // redirect to the frontend rather than returning raw JSON.
+  res.redirect(`${env.CLIENT_URL}/login?verified=true`);
+});
+
+/**
+ * POST /auth/complete-email  [authenticate]
+ *
+ * The endpoint a pending OAuth account (no email from provider) hits
+ * during onboarding. Requires authentication because we need to know
+ * WHICH account is completing their email — this is reached only
+ * after the user already has a valid access token from the OAuth
+ * callback below.
+ */
+export const completeEmail = asyncHandler(async (req: Request, res: Response) => {
+  await authService.completeEmail(req.user!.userId, req.body.email);
+
+  res.status(200).json(new ApiResponse(200, "Email added — check your inbox to verify it", null));
+});
+
+
+// ============================================================
 // ------------| OAUTH CONTROLLERS |------------
 // ============================================================
 
@@ -126,8 +167,9 @@ const providerMap: Record<
   github: { getAuthUrl: getGithubAuthUrl, fetchProfile: fetchGithubProfile },
 };
 
-export const oauthRedirect = asyncHandler( async (req: Request, res: Response) => {
-    const provider = req.params.provider as ProviderName;                // get provider from param
+export const oauthRedirect = asyncHandler(
+  async (req: Request, res: Response) => {
+    const provider = req.params.provider as ProviderName; // get provider from param
 
     // mapprovider -> if not, badrequest (unsupported)
     if (!providerMap[provider]) {
@@ -151,8 +193,6 @@ export const oauthRedirect = asyncHandler( async (req: Request, res: Response) =
   },
 );
 
-
-
 /**
  * GET /auth/oauth/:provider/callback
  *
@@ -161,7 +201,8 @@ export const oauthRedirect = asyncHandler( async (req: Request, res: Response) =
  * is where github.provider.ts's email-fetching fix actually executes),
  * then hand off to the SAME handleOAuthLogin() used for every provider.
  */
-export const oauthCallback = asyncHandler( async (req: Request, res: Response) => {
+export const oauthCallback = asyncHandler(
+  async (req: Request, res: Response) => {
     // provider
     const provider = req.params.provider as ProviderName;
 

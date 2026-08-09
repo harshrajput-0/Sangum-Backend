@@ -300,9 +300,56 @@ console.log("has refreshToken field:", account?.refreshToken);
   };
 };
 
+
+
+
 // ============================================================
-// ----------------| FORGOT OR RESET PASSWORD |----------------
+// ----------------| EMAIL VERIFICATION CODE |----------------
 // ============================================================
+export const verifyEmail = async (rawToken: string) => {
+  // get account by verificaiton token
+  const account = await authRepository.findByVerificationToken(hashToken(rawToken));
+
+  // check if verifcation account exist or not
+  if (!account){
+    throw ApiError.badRequest("Verification link is invalid or expired")
+  }
+
+  // mark account as verified 
+  await authRepository.markEmailVerified(account._id.toString());
+} 
+
+export const resendVerification = async (userId: string) => {
+  // find account
+  const account = await authRepository.findByUserId(userId);
+
+  // question account existence 
+  if (!account){
+    throw ApiError.badRequest("No email on file to verify");
+  }
+
+  // check if verified
+  if (account.isVerified){
+    throw ApiError.badRequest("Email is already verified");
+  }
+
+  // raw token
+  const rawToken = generateRandomToken();
+
+  // set email veification token
+  await authRepository.setEmailVerificationToken(
+    account._id.toString(),
+    hashToken(rawToken),
+    new Date(Date.now() + 60 * 60 * 1000)
+  );
+
+  // send the answeres
+  //   queueEmail({
+  //   type: "verification",
+  //   to: account.email,
+  //   data: { verifyUrl: `${env.CLIENT_URL}/verify-email/${rawToken}` },
+  // });
+} 
 
 // ============================================================
 // ---------------| HANDLE OAUTH LOGIN SERVICE |---------------
@@ -486,7 +533,7 @@ export const completeEmail = async (
   }
 
   // if account.haseamil not, bad request (account has email)
-  if (!account.needEmail()) {
+  if (!account.needsEmail()) {
     throw ApiError.badRequest("This account already has an email register");
   }
 

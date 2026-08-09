@@ -120,7 +120,7 @@ export const updatePassword = (accountId: string, newPassword: string) => {
     if (!account) return null;
 
     account.password = newPassword;
-    account.save();
+    return account.save();
   });
 };
 
