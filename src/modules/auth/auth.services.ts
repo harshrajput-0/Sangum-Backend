@@ -297,6 +297,7 @@ export const forgotPassword = async (email: string): Promise<void> => {
 
   // raw token
   const rawToken = generateRandomToken();
+  console.log("FRESH RESET TOKEN:", rawToken); // 👈 add this
 
   // set password reset tokekn
   await authRepository.setPasswordResetToken(
@@ -314,8 +315,14 @@ export const forgotPassword = async (email: string): Promise<void> => {
 
 
 export const resetPassword = async (rawToken: string, newPassword: string): Promise<void> => {
+
+    console.log("raw token received:", JSON.stringify(rawToken), "length:", rawToken.length);
+  console.log("hashed to:", hashToken(rawToken));
+  console.log("server's current time:", new Date().toISOString());
+
   // find by resetpasswordtoken
   const account = await authRepository.findByPasswordResetToken(hashToken(rawToken));
+  console.log("account found:", account ? account._id : null);
 
   // check if reset token to that account exist
   if(!account) {
@@ -366,7 +373,7 @@ const sendVerificationEmail = async (accountId: string, email: string, displayNa
   sendEmail({
     to: email,
     subject: "Verify your email",
-    html: verificationTemplate(`${env.CLIENT_URL}/verify-email/${rawToken}`, displayName),
+    html: verificationTemplate(`${env.API_URL}/verify-email/${rawToken}`, displayName),
   }).catch((err) => console.error("Failed to send verification email:", err));
 };
 

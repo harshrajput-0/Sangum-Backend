@@ -89,7 +89,7 @@ export const setEmailVerificationToken = (
   expiry: Date,
 ) => {
   return Account.findByIdAndUpdate(accountId, {
-    emailVerificaiontToken: hashedToken, // was emailVerificaiontToken
+    emailVerificationToken: hashedToken, // was emailVerificationToken
     emailVerificationExpiry: expiry,
   });
 };
@@ -99,7 +99,7 @@ export const findByVerificationToken = (hashedToken: string) => {
   return Account.findOne({
     emailVerificationToken: hashedToken,
     emailVerificationExpiry: { $gt: new Date() },
-  }).select("+emailVerificaiontToken +emailVerificationExpiry"); // was emailVerificaiontToken
+  }).select("+emailVerificationToken +emailVerificationExpiry"); // was emailVerificationToken
 };
 
 // Mark if emailVerified or not
