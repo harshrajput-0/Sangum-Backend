@@ -300,7 +300,57 @@ console.log("has refreshToken field:", account?.refreshToken);
   };
 };
 
+// ============================================================
+// ----------------| FORGOT OR RESET PASSWORD |----------------
+// ============================================================
+export const forgotPassword = async (email: string): Promise<void> => {
+  // find email
+  const account = await authRepository.findByEmail(email);
 
+  // check if account exist?
+  if (!account) return;
+
+  // raw token
+  const rawToken = generateRandomToken();
+
+  // set password reset tokekn
+  await authRepository.setPasswordResetToken(
+    account._id.toString(),
+    hashToken(rawToken),
+    new Date(Date.now() + 60 * 60 * 1000)
+  );
+
+  //   queueEmail({
+  //   type: "password-reset",
+  //   to: email,
+  //   data: { resetUrl: `${env.CLIENT_URL}/reset-password/${rawToken}` },
+  // });
+}
+
+
+export const resetPassword = async (rawToken: string, newPassword: string): Promise<void> => {
+  // find by resetpasswordtoken
+  const account = await authRepository.findByPasswordResetToken(hashToken(rawToken));
+
+  // check if reset token to that account exist
+  if(!account) {
+    throw ApiError.badRequest("The token is invalid or expired")
+  }
+
+  // save the new password
+  account.password = newPassword
+
+  // wait for account details to save
+  await account.save();
+
+
+  // clear reset password token once used
+  await authRepository.clearPasswordResetToken(account._id.toString());
+
+  // clear refresh token, to make existing session valid (especially if password is compromised)
+  await authRepository.clearRefreshToken(account._id.toString());
+
+}
 
 
 // ============================================================

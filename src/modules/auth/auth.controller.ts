@@ -117,6 +117,33 @@ export const refreshToken = asyncHandler(
 );
 
 // ============================================================
+// ------------------| FORGET/RESET PASSWORD |-----------------
+// ============================================================
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  await authService.forgotPassword(req.body.email);
+
+  // Always 200, always the same message — see the comment in
+  // auth.service.ts forgotPassword() for why (email enumeration).
+  res.status(200).json(
+    new ApiResponse(200, "If an account exists with that email, a reset link has been sent", null)
+  );
+});
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  if (typeof token !== "string") {
+    res.status(400).json({ message: "Invalid verification token", });
+    return;
+  }
+  
+  await authService.resetPassword(token, newPassword);
+
+  res.status(200).json(new ApiResponse(200, "Password reset successfully", null));
+});
+
+// ============================================================
 // -------------------| EMAIL VERIFICATION |-------------------
 // ============================================================
 export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
