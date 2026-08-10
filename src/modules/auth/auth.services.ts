@@ -12,8 +12,13 @@ import {
   verifyRefreshToken,
 } from "../../utils/generateTokens.js";
 
+
 import { env } from "../../config/env.js";
 import UserStats from "../users/userStat.model.js";
+
+import { sendEmail } from "../../services/email.service.js";
+import { verificationTemplate } from "../../templates/verification.template.js";
+import { resetPasswordTemplate } from "../../templates/reset-password.template.js";
 
 // Token hashing
 const hashToken = (token: string): string =>
@@ -105,29 +110,10 @@ export const registerUser = async (
     // Fire off verification email AFTER commit — never email the user
     // about an account that might still roll back.
 
-    // generateRandomToken
-    const rawToken = generateRandomToken();
 
-    // Send email
-    await authRepository.setEmailVerificationToken(
-      account._id.toString(),
-      hashToken(rawToken),
-      new Date(Date.now() + 24 * 60 * 60 * 1000),
-    );
 
-    //
-    // queueEmail({
-    //   type: "verification",
-    //   to: email,
-    //   data: { verifyUrl: `${env.CLIENT_URL}/verify-email/${rawToken}` },
-    // });
 
-    // //
-    // queueEmail({
-    //   type: "welcome",
-    //   to: email,
-    //   data: { displayName: user.displayName },
-    // });
+await sendVerificationEmail(account._id.toString(), email, user.displayName);
 
     // Generate accessToken and refreshToken
     const accessToken = generateAccessToken({
@@ -257,8 +243,7 @@ export const refreshAccessToken = async (refreshToken: string) => {
 
   // find account
   const account = await authRepository.findByUserId(payload.userId);
-console.log("account:", account);
-console.log("has refreshToken field:", account?.refreshToken);
+
 
   // if acount doesn't have refreshToken then session not found
   if (!account || !account.refreshToken) {
@@ -320,11 +305,11 @@ export const forgotPassword = async (email: string): Promise<void> => {
     new Date(Date.now() + 60 * 60 * 1000)
   );
 
-  //   queueEmail({
-  //   type: "password-reset",
-  //   to: email,
-  //   data: { resetUrl: `${env.CLIENT_URL}/reset-password/${rawToken}` },
-  // });
+ sendEmail({
+  to: email,
+  subject: "Reset your password",
+  html: resetPasswordTemplate(`${env.CLIENT_URL}/reset-password/${rawToken}`),
+}).catch((err) => console.error("Failed to send reset email:", err));
 }
 
 
@@ -369,6 +354,22 @@ export const verifyEmail = async (rawToken: string) => {
   await authRepository.markEmailVerified(account._id.toString());
 } 
 
+
+// Currnetly added
+const sendVerificationEmail = async (accountId: string, email: string, displayName?: string) => {
+  const rawToken = generateRandomToken();
+  await authRepository.setEmailVerificationToken(
+    accountId,
+    hashToken(rawToken),
+    new Date(Date.now() + 24 * 60 * 60 * 1000),
+  );
+  sendEmail({
+    to: email,
+    subject: "Verify your email",
+    html: verificationTemplate(`${env.CLIENT_URL}/verify-email/${rawToken}`, displayName),
+  }).catch((err) => console.error("Failed to send verification email:", err));
+};
+
 export const resendVerificationEmail = async (userId: string) => {
   // find account
   const account = await authRepository.findByUserId(userId);
@@ -377,7 +378,6 @@ export const resendVerificationEmail = async (userId: string) => {
   if (!account){
     throw ApiError.notFound("Account Not Found");
   }
-
   if (!account.email){
     throw ApiError.badRequest("No email found in account")
   }
@@ -387,22 +387,8 @@ export const resendVerificationEmail = async (userId: string) => {
     throw ApiError.badRequest("Email is already verified");
   }
 
-  // raw token
-  const rawToken = generateRandomToken();
+    await sendVerificationEmail(account._id.toString(), account.email);   // Sends actual email
 
-  // set email veification token
-  await authRepository.setEmailVerificationToken(
-    account._id.toString(),
-    hashToken(rawToken),
-    new Date(Date.now() + 60 * 60 * 1000)
-  );
-
-  // send the answeres
-  //   queueEmail({
-  //   type: "verification",
-  //   to: account.email,
-  //   data: { verifyUrl: `${env.CLIENT_URL}/verify-email/${rawToken}` },
-  // });
 } 
 
 // ============================================================
@@ -576,7 +562,7 @@ export const completeEmail = async (
   const emailExist = await authRepository.checkEmailExists(email);
 
   // check if email already exist, if yes conflict
-  if (!emailExist) {
+  if (emailExist) {
     throw ApiError.conflict("An account with this email already exist");
   }
 
@@ -593,4 +579,5 @@ export const completeEmail = async (
 
   // set email with account and email
   await authRepository.setEmail(account._id.toString(), email);
+  await sendVerificationEmail(account._id.toString(), email);    // Sends the actual mail
 };
