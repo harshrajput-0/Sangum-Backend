@@ -369,13 +369,17 @@ export const verifyEmail = async (rawToken: string) => {
   await authRepository.markEmailVerified(account._id.toString());
 } 
 
-export const resendVerification = async (userId: string) => {
+export const resendVerificationEmail = async (userId: string) => {
   // find account
   const account = await authRepository.findByUserId(userId);
 
   // question account existence 
   if (!account){
-    throw ApiError.badRequest("No email on file to verify");
+    throw ApiError.notFound("Account Not Found");
+  }
+
+  if (!account.email){
+    throw ApiError.badRequest("No email found in account")
   }
 
   // check if verified

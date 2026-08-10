@@ -161,6 +161,12 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   res.redirect(`${env.CLIENT_URL}/login?verified=true`);
 });
 
+export const resendVerification = asyncHandler(async (req: Request, res: Response) => {
+  await authService.resendVerificationEmail(req.user!.userId);
+
+  res.status(200).json(new ApiResponse(200, "Verification email sent", null));
+});
+
 /**
  * POST /auth/complete-email  [authenticate]
  *

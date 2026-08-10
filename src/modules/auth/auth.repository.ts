@@ -89,7 +89,7 @@ export const setEmailVerificationToken = (
   expiry: Date,
 ) => {
   return Account.findByIdAndUpdate(accountId, {
-    emailVerificaiontToken: hashedToken,
+    emailVerificaiontToken: hashedToken, // was emailVerificaiontToken
     emailVerificationExpiry: expiry,
   });
 };
@@ -99,7 +99,7 @@ export const findByVerificationToken = (hashedToken: string) => {
   return Account.findOne({
     emailVerificationToken: hashedToken,
     emailVerificationExpiry: { $gt: new Date() },
-  }).select("+emailVerificaiontToken +emailVerificationExpiry");
+  }).select("+emailVerificaiontToken +emailVerificationExpiry"); // was emailVerificaiontToken
 };
 
 // Mark if emailVerified or not
@@ -129,9 +129,11 @@ export const addOAuthProvider = (
   accountId: string,
   providerData: IOAuthProvider,
 ) => {
-  return Account.findById(accountId, {
-    $push: { authProviders: providerData },
-  });
+  return Account.findByIdAndUpdate(
+    accountId,
+    { $push: { authProviders: providerData } },
+    { new: true }, // return the updated document, not the pre-update one
+  );
 };
 
 // Set Emaill in Account using accountId

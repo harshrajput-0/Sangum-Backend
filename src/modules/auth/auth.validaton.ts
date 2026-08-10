@@ -27,7 +27,7 @@ export const forgetPasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string(),
+  // token: z.string(),
   newPassword: passwordRule,
 });
 
