@@ -1,4 +1,4 @@
-import { UserRole, IBadge, ISocialLinks } from "./user.model";
+import { UserRole, IBadge, ISocialLinks } from "./user.model.js";
 
 // ===| REQUEST PAYLOADS |────────────────────────────────────────────────────────────────
 

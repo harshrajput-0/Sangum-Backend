@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import { UserRole } from "../modules/users/user.model";
-import { env } from "../config/env";
+import { UserRole } from "../modules/users/user.model.js";
+import { env } from "../config/env.js";
 
 // ======| PAYLOAD INTERFACE |======
 export interface AccessTokenPayload {

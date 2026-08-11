@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import ApiError from "../utils/ApiError";
-import { UserRole } from "../modules/users/user.model";
+import ApiError from "../utils/ApiError.js";
+import { UserRole } from "../modules/users/user.model.js";
 
 export const requireRole = (...allowedRoles: UserRole[]) => {
     return (req: Request, _res: Response, next: NextFunction) => {

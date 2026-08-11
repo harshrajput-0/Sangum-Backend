@@ -11,21 +11,24 @@ import {
   completeEmailSchema,
 } from "./auth.validaton.js";
 
+import { authRateLimit } from "../../middlewares/rateLimit.middleware.js";
+
 
 const router = Router();
 
-router.post("/register", validate(registerSchema), authController.register);
-router.post("/login", validate(loginSchema), authController.login);
-router.post("/logout", authenticate, authController.logout);
-router.post("/refresh-token", authController.refreshToken);
+router.post("/register", authRateLimit, validate(registerSchema), authController.register);
+router.post("/login", authRateLimit, validate(loginSchema), authController.login);
+router.post("/logout", authRateLimit, authenticate, authController.logout);
+router.post("/refresh-token", authRateLimit, authController.refreshToken);
 
 
 
 
-router.post("/forgot-password", validate(forgetPasswordSchema), authController.forgotPassword);
+router.post("/forgot-password", authRateLimit,validate(forgetPasswordSchema), authController.forgotPassword);
 
 router.post(
   "/reset-password/:token",
+  authRateLimit,
   validate(tokenParamSchema, "params"),
   validate(resetPasswordSchema),
   authController.resetPassword,
