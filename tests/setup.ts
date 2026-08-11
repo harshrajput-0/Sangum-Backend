@@ -24,6 +24,13 @@ process.env.CLOUDINARY_API_SECRET = "test";
 process.env.EMAIL_USER = "test@example.com";
 process.env.EMAIL_PASS = "test";
 
+
+process.env.MONGO_URI = "mongodb://localhost:27017/test"; // unused since setup.ts connects via replset.getUri() directly, but still required by the schema
+process.env.API_URL = "http://localhost:5000";
+process.env.LINKEDIN_CLIENT_ID = "test";
+process.env.LINKEDIN_CLIENT_SECRET = "test";
+process.env.LINKEDIN_CALLBACK_URL = "http://localhost:5000/api/v1/auth/oauth/linkedin/callback";
+
 // Never let a test suite send a real email.
 vi.mock("../src/services/email.service.js", () => ({
   sendEmail: vi.fn().mockResolvedValue(undefined),

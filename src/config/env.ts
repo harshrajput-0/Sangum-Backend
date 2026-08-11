@@ -1,4 +1,4 @@
-import { string, z } from "zod";
+import { z } from "zod";
 import dotenv from "dotenv";
 import { StringValue } from "ms";
 dotenv.config();
@@ -32,7 +32,7 @@ const envSchema = z.object({
 
   // ==| GITHUB VARIABLE |------------------------------------------------------
   GITHUB_CLIENT_ID: z.string(),
-  GITHUB_CLIENT_SECRET: string(),
+  GITHUB_CLIENT_SECRET: z.string(),
   GITHUB_CALLBACK_URL: z.string(),
 
   // ==| LINKEDIN VARIABLE |----------------------------------------------------
@@ -46,7 +46,7 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1),
 
   // ==| EMAIL (nodemailer / Gmail) |------------------------------------------
-  EMAIL_USER: z.string().email("EMAIL_USER API_URL: z.string().url(),must be a valid email address"),
+  EMAIL_USER: z.string().email("EMAIL_USER must be a valid email address"),
   EMAIL_PASS: z.string().min(1, "EMAIL_PASS is required"),
 
 });
