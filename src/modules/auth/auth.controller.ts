@@ -12,12 +12,15 @@ import crypto from "crypto";
 import {
   getGoogleAuthUrl,
   fetchGoogleProfile,
-} from "./provider/google.provider.js";
+} from "./providers/google.provider.js";
 import {
   getGithubAuthUrl,
   fetchGithubProfile,
-} from "./provider/github.provider.js";
-import { string } from "zod";
+} from "./providers/github.provider.js";
+import {
+  getLinkedinAuthUrl,
+  fetchLinkedinProfile,
+} from "./providers/linkedin.provider.js";
 
 const REFRESH_COOKIE_NAME = "sangum_refresh_token";
 
@@ -119,29 +122,41 @@ export const refreshToken = asyncHandler(
 // ============================================================
 // ------------------| FORGET/RESET PASSWORD |-----------------
 // ============================================================
-export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
-  await authService.forgotPassword(req.body.email);
+export const forgotPassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    await authService.forgotPassword(req.body.email);
 
-  // Always 200, always the same message — see the comment in
-  // auth.service.ts forgotPassword() for why (email enumeration).
-  res.status(200).json(
-    new ApiResponse(200, "If an account exists with that email, a reset link has been sent", null)
-  );
-});
+    // Always 200, always the same message — see the comment in
+    // auth.service.ts forgotPassword() for why (email enumeration).
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          "If an account exists with that email, a reset link has been sent",
+          null,
+        ),
+      );
+  },
+);
 
-export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
-  const { token } = req.params;
-  const { newPassword } = req.body;
+export const resetPassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { token } = req.params;
+    const { newPassword } = req.body;
 
-  if (typeof token !== "string") {
-    res.status(400).json({ message: "Invalid verification token", });
-    return;
-  }
-  
-  await authService.resetPassword(token, newPassword);
+    if (typeof token !== "string") {
+      res.status(400).json({ message: "Invalid verification token" });
+      return;
+    }
 
-  res.status(200).json(new ApiResponse(200, "Password reset successfully", null));
-});
+    await authService.resetPassword(token, newPassword);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Password reset successfully", null));
+  },
+);
 
 // ============================================================
 // -------------------| EMAIL VERIFICATION |-------------------
@@ -150,7 +165,7 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   const { token } = req.params;
 
   if (typeof token !== "string") {
-    res.status(400).json({ message: "Invalid verification token", });
+    res.status(400).json({ message: "Invalid verification token" });
     return;
   }
 
@@ -161,11 +176,13 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   res.redirect(`${env.CLIENT_URL}/login?verified=true`);
 });
 
-export const resendVerification = asyncHandler(async (req: Request, res: Response) => {
-  await authService.resendVerificationEmail(req.user!.userId);
+export const resendVerification = asyncHandler(
+  async (req: Request, res: Response) => {
+    await authService.resendVerificationEmail(req.user!.userId);
 
-  res.status(200).json(new ApiResponse(200, "Verification email sent", null));
-});
+    res.status(200).json(new ApiResponse(200, "Verification email sent", null));
+  },
+);
 
 /**
  * POST /auth/complete-email  [authenticate]
@@ -176,18 +193,27 @@ export const resendVerification = asyncHandler(async (req: Request, res: Respons
  * after the user already has a valid access token from the OAuth
  * callback below.
  */
-export const completeEmail = asyncHandler(async (req: Request, res: Response) => {
-  await authService.completeEmail(req.user!.userId, req.body.email);
+export const completeEmail = asyncHandler(
+  async (req: Request, res: Response) => {
+    await authService.completeEmail(req.user!.userId, req.body.email);
 
-  res.status(200).json(new ApiResponse(200, "Email added — check your inbox to verify it", null));
-});
-
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          "Email added — check your inbox to verify it",
+          null,
+        ),
+      );
+  },
+);
 
 // ============================================================
 // ------------| OAUTH CONTROLLERS |------------
 // ============================================================
 
-type ProviderName = "google" | "github";
+type ProviderName = "google" | "github" | "linkedin";
 
 const providerMap: Record<
   ProviderName,
@@ -198,6 +224,10 @@ const providerMap: Record<
 > = {
   google: { getAuthUrl: getGoogleAuthUrl, fetchProfile: fetchGoogleProfile },
   github: { getAuthUrl: getGithubAuthUrl, fetchProfile: fetchGithubProfile },
+  linkedin: {
+    getAuthUrl: getLinkedinAuthUrl,
+    fetchProfile: fetchLinkedinProfile,
+  },
 };
 
 export const oauthRedirect = asyncHandler(
@@ -257,8 +287,10 @@ export const oauthCallback = asyncHandler(
     const profile = await providerMap[provider].fetchProfile(code);
     const result = await authService.handleOAuthLogin(profile);
 
+    // console.log("accessToken:", result.accessToken); // 👈 temporary
+
     // setRefreshCookie
-    console.log("setting refresh cookie, token:", result.refreshToken);
+    // console.log("setting refresh cookie, token:", result.refreshToken);
     setRefreshCookie(res, result.refreshToken);
 
     // response

@@ -36,7 +36,9 @@ const envSchema = z.object({
   GITHUB_CALLBACK_URL: z.string(),
 
   // ==| LINKEDIN VARIABLE |----------------------------------------------------
-
+  LINKEDIN_CLIENT_ID: z.string().min(1),
+  LINKEDIN_CLIENT_SECRET: z.string().min(1),
+  LINKEDIN_CALLBACK_URL: z.string().url(),
 
   // ==| Cloudinary (media uploads) |-----------------------------------------
   CLOUDINARY_CLOUD_NAME: z.string().min(1),

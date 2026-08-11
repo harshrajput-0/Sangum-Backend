@@ -132,13 +132,13 @@ export const addOAuthProvider = (
   return Account.findByIdAndUpdate(
     accountId,
     { $push: { authProviders: providerData } },
-    { new: true }, // return the updated document, not the pre-update one
+    { returnDocument: "after" }, // return the updated document, not the pre-update one
   );
 };
 
 // Set Emaill in Account using accountId
 export const setEmail = (accountId: string, email: string) => {
-  return Account.findByIdAndUpdate(accountId, { email }, { new: true });
+  return Account.findByIdAndUpdate(accountId, { email }, { returnDocument: "after" });
 };
 
 // Check Email in Account
