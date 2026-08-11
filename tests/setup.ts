@@ -1,6 +1,9 @@
 import { beforeAll, afterAll, afterEach, vi } from "vitest";
-import { MongoMemoryReplSet } from "mongodb-memory-server"; // was MongoMemoryServer
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 import mongoose from "mongoose";
+import Account from "../src/modules/auth/account.model.js";
+import User from "../src/modules/users/user.model.js";
+import UserStats from "../src/modules/users/userStat.model.js";
 
 let replset: MongoMemoryReplSet;
 
@@ -36,9 +39,21 @@ vi.mock("../src/services/email.service.js", () => ({
   sendEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
+
 beforeAll(async () => {
   replset = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(replset.getUri());
+
+  // registerUser (and handleOAuthLogin) write to accounts/users/userstats
+  // inside a transaction. MongoDB doesn't allow a collection to be created
+  // implicitly as a side effect of a transaction — the very first write to
+  // a not-yet-existing collection throws "due to catalog changes; please
+  // retry". Explicitly creating the collections here, outside any
+  // transaction, means that catalog change already happened before any
+  // real test runs one — so no transaction is ever the one that triggers it.
+  await Account.createCollection();
+  await User.createCollection();
+  await UserStats.createCollection();
 });
 
 // afterEach(async () => {
