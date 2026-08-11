@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import { env } from "../config/env.js";
 
 // Accepted tradeoff for now: keep strict rate limiting on refresh-token/logout
 // as a pre-launch default. The shared-IP/NAT risk is understood. If real users
@@ -9,6 +10,7 @@ export const authRateLimit = rateLimit({
   max: 10, // 10 attempts per IP per window
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => env.NODE_ENV === "test", // 👈 don't let tests trip the real limiter
   message: {
     success: false,
     statusCode: 429,

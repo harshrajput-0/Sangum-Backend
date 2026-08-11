@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   // ==| SERVER |---------------------------------------------------------
-  NODE_ENV: z.enum(["development", "production"]).default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.string().default("3000"),
   CLIENT_URL: z.string().url(),
   API_URL: z.string().url(),

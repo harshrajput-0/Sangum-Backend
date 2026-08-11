@@ -101,7 +101,7 @@ export const registerUser = async (
     const userStats = await authRepository.createUserStats(
       [{ userId: user._id }],
       session,
-    );
+    ); 
     // Fix Applied for - "userStats" possibly undefined error
     if (!userStats) throw ApiError.internal("Failed to create user stats");
 
