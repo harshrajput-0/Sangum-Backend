@@ -44,16 +44,15 @@ beforeAll(async () => {
   replset = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(replset.getUri());
 
-  // registerUser (and handleOAuthLogin) write to accounts/users/userstats
-  // inside a transaction. MongoDB doesn't allow a collection to be created
-  // implicitly as a side effect of a transaction — the very first write to
-  // a not-yet-existing collection throws "due to catalog changes; please
-  // retry". Explicitly creating the collections here, outside any
-  // transaction, means that catalog change already happened before any
-  // real test runs one — so no transaction is ever the one that triggers it.
-  await Account.createCollection();
-  await User.createCollection();
-  await UserStats.createCollection();
+  // .init() (not just .createCollection()) waits for BOTH the collection
+  // to exist AND its indexes to finish building — Mongoose builds indexes
+  // asynchronously in the background, so createCollection() alone could
+  // still leave a window where the collection exists but an index is
+  // mid-build right as the first transaction fires, triggering this same
+  // "catalog changes" error from a different angle.
+  await Account.init();
+  await User.init();
+  await UserStats.init();
 });
 
 // afterEach(async () => {
