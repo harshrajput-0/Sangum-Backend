@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 
 // ==| ENUM |────────────────────────────────────────────────────────────────
+
 export enum UserRole {
   USER = "user",
   MODERATOR = "moderator",
@@ -15,11 +16,13 @@ export enum BadgeType {
 }
 
 // ===| SUB INTERFACE |────────────────────────────────────────────────────────────────
+
 export interface ISocialLinks {
   github?: string;
   linkedIn?: string;
   twitter?: string;
   website?: string;
+  youtube?: string;
 }
 
 export interface IBadge {
@@ -28,6 +31,7 @@ export interface IBadge {
 }
 
 // ===| INTERFACE |────────────────────────────────────────────────────────────────
+
 export interface IUser extends Document {
   _id: Types.ObjectId;
   accountId: Types.ObjectId;
@@ -48,15 +52,20 @@ export interface IUser extends Document {
 }
 
 // ==| Actual Schema |----------------------------------------------------------
-const socialLinksSchema = new Schema<ISocialLinks>({
+
+const socialLinksSchema = new Schema<ISocialLinks>(
+  {
   github: { type: String, trim: true },
   linkedIn: { type: String, trim: true },
   twitter: { type: String, trim: true },
   website: { type: String, trim: true },
+  youtube: { type: String, trim: true },
 },
-{ _id: false });
+{ _id: false }
+);
 
-const badgeSchema = new Schema<IBadge>({
+const badgeSchema = new Schema<IBadge>(
+  {
   types: {
     type: String,
     enum: Object.values(BadgeType),
@@ -67,7 +76,8 @@ const badgeSchema = new Schema<IBadge>({
     default: Date.now(),
   },
 },
-{ _id: false });
+{ _id: false }
+);
 
 const userSchema = new Schema<IUser>(
   {
@@ -162,10 +172,12 @@ const userSchema = new Schema<IUser>(
 );
 
 // ===| Indexes |──────────────────────────────────────────────────────────────────
+
 userSchema.index({ username: "text", displayName: "text" });
 userSchema.index({ isOnline: 1, lastSeen: -1 });
 userSchema.index({ role: 1 });
 
 // ===| Model |─────────────────────────────────────────────────────────────────
+
 const User = mongoose.model<IUser>("User", userSchema);
 export default User;
