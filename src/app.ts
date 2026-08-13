@@ -21,7 +21,7 @@ export const createApp = (): Application => {
   );
   app.use(
     cors({
-      origin: env.CLIENT_URL,
+      origin: ["http://localhost:5173", "https://sangum-app.vercel.app"],
       credentials: true, // required for the httpOnly refresh-token cookie to be sent cross-origin
     }),
   );
@@ -29,12 +29,9 @@ export const createApp = (): Application => {
   app.use(cookieParser());
   app.use(express.json());
 
-
   const API_PREFIX = "/api/v1";
 
-  
   app.use(`${API_PREFIX}/auth`, authRoutes);
-
 
   app.use("/api", contactRoutes);
   app.use("/api", waitlistRountes);
