@@ -28,7 +28,7 @@ const setRefreshCookie = (res: Response, token: string) => {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: "lax", // sent on top-level navigation (needed for OAuth redirects)
+    sameSite: env.NODE_ENV === "production" ? "none" : "lax", // sent on top-level navigation (needed for OAuth redirects)
     // domain: env.COOKIE_DOMAIN,      //[Backend Domain]
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/", // only sent back to auth routes, not the whole API
@@ -246,7 +246,12 @@ export const oauthRedirect = asyncHandler(
     const state = crypto.randomBytes(16).toString("hex");
 
     // response cookie
-    res.cookie("oauth_state", state, { httpOnly: true, maxAge: 5 * 60 * 1000 });
+    res.cookie("oauth_state", state, {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "lax", // top-level redirect both ways — lax is correct here regardless of cross-site
+      maxAge: 5 * 60 * 1000,
+    });
 
     // url
     const url = providerMap[provider].getAuthUrl(state);
