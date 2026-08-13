@@ -1,10 +1,11 @@
 import { sendEmail } from "../../services/email.service.js";
 import type { ContactInput } from "./contact.validation.js";
+import { env } from "../../config/env.js";
 
 // contact.service.ts
 export const sendMessage = ({ name, email, message }: ContactInput) => {
   sendEmail({
-    to: process.env.EMAIL_USER!,
+    to: env.CONTACT_RECIPIENT_EMAIL,
     subject: `New contact message from ${name}`,
     html: `
       <h2>New Contact Message</h2>
