@@ -2,6 +2,18 @@ import { UserRole, IBadge, ISocialLinks } from "./user.model.js";
 
 // ===| REQUEST PAYLOADS |────────────────────────────────────────────────────────────────
 
+export interface OnboardingPayload {
+    username?: string;
+    fullName?: string;
+}
+
+export interface OnboardingResponse {
+    username: string;
+    displayName: string;
+    avatar: string | null;
+    isProfileComplete: boolean;
+}
+
 export interface UpdateProfilePayloads {
     displayName?: string;
     bio?: string;

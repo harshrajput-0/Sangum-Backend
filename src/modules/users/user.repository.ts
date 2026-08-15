@@ -54,3 +54,13 @@ export const updateOnlineStatus = (userId: string, isOnline: boolean) => {
 export const usernameExist = (username: string) => {
     return User.exists({username});
 }
+
+// check if username exists, excluding a given user's own document
+// (needed so onboarding doesn't reject a candidate against itself)
+export const usernameExistsExcludingUser = (username: string, excludeUserId?: string) => {
+    const query: Record<string, unknown> = {username};
+    if (excludeUserId) {
+        query._id = { $ne: excludeUserId };
+    }
+    return User.exists(query);
+}
