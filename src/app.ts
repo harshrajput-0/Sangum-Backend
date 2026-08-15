@@ -34,7 +34,7 @@ export const createApp = (): Application => {
   const API_PREFIX = "/api/v1";
 
   app.use(`${API_PREFIX}/auth`, authRoutes);
-  app.use(`${API_PREFIX}/user`, userRoutes);
+  app.use(`${API_PREFIX}/users`, userRoutes);
 
   app.use("/api", contactRoutes);
   app.use("/api", waitlistRountes);
