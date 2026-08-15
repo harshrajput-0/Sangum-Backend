@@ -28,9 +28,18 @@ describe("GET /api/v1/auth/me", () => {
   it("reflects isProfileComplete: true right after onboarding completes, using the same access token", async () => {
     const accessToken = await registerAndLogin("me.after.onboarding@example.com");
 
-    await request(app)
+    const onboardingRes = await request(app)
       .post("/api/v1/users/onboarding")
       .set("Authorization", `Bearer ${accessToken}`);
+
+    // This was previously discarded entirely — if onboarding itself failed
+    // for any reason, isProfileComplete staying false below would look
+    // like a /me bug when it was actually this call never succeeding.
+    expect(
+      onboardingRes.status,
+      `onboarding POST failed: ${JSON.stringify(onboardingRes.body)}`,
+    ).toBe(200);
+    expect(onboardingRes.body.data.isProfileComplete).toBe(true);
 
     const res = await request(app)
       .get("/api/v1/auth/me")
