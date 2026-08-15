@@ -30,6 +30,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^6.0.3",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
