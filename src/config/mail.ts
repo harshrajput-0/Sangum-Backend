@@ -1,12 +1,11 @@
+// temporary test file, run with your real BREVO_API_KEY
 import { BrevoClient } from "@getbrevo/brevo";
-import { env } from "./env.js";
 
-// config/mail.ts — temporary debug, remove after confirming
-console.log("BREVO_API_KEY length:", env.BREVO_API_KEY.length);
-console.log("BREVO_API_KEY starts with:", env.BREVO_API_KEY.slice(0, 8));
-console.log("BREVO_API_KEY ends with:", env.BREVO_API_KEY.slice(-4));
+const brevo = new BrevoClient({ apiKey: "your-real-key" });
 
-export const brevo = new BrevoClient({ apiKey: env.BREVO_API_KEY });
+brevo.account.getAccount()
+  .then((res) => console.log("SDK account call SUCCESS", res))
+  .catch((err) => console.log("SDK account call FAILED", err.statusCode, err.body));
 
 
 
