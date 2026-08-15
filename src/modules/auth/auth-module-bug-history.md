@@ -2,10 +2,11 @@
 
 Every bug found and fixed across the whole auth module, from the initial
 static-code audit through manual Postman testing through the automated
-Supertest suite. Organized to match the same 10-phase structure as the
-interactive fix-plan tracker, so the two can be cross-referenced directly.
+Supertest suite. Organized into phases matching how the work actually
+happened, so later phases can be cross-referenced against the summary
+table below.
 
-**38 issues total** — routing bugs that made endpoints unreachable, logic
+**33 issues total** — routing bugs that made endpoints unreachable, logic
 bugs that crashed working requests, data-layer typos that silently broke
 features, missing wiring, and a handful of things only automated testing
 was fast/thorough enough to catch.
@@ -48,6 +49,7 @@ was fast/thorough enough to catch.
 | 30 | In-memory MongoDB doesn't support transactions by default | Supertest suite (infra) | — |
 | 31 | "Catalog changes" error on the first transactional write | Supertest suite (infra) | — |
 | 32 | `noUncheckedIndexedAccess` + `set-cookie` mistyping in test code | Supertest suite (infra) | — |
+| 33 | OAuth new-user creation missing `avatar` seed from provider picture | Supertest suite (diagnostic checkpoint) | Medium |
 
 Rows 29–32 are testing-infrastructure issues, not application defects —
 included for completeness; full write-up in `testing-bugs-found.md`.
@@ -243,12 +245,93 @@ friction rather than application bugs — fully detailed in
 
 ---
 
+## Phase 11: Onboarding integration — `GET /auth/me` and OAuth avatar seeding
+
+Once the `users` module (see `user-module-bug-history.md`) needed a way to
+default a new user's avatar from their OAuth provider photo, and the
+frontend needed a way to re-check session state without forcing a refresh
+token rotation, two changes landed in `auth.services.ts`:
+
+**New: `GET /auth/me`.** A deliberate read-only counterpart to
+`refreshAccessToken` — same `AuthUserResponse` shape, but no token
+rotation, no cookie writes, and not behind `authRateLimit`. `refresh-token`
+remains the only way to recover session state on a cold page load (it's
+the only endpoint that can authenticate off the refresh cookie alone,
+since there's no access token yet at that point) — `/auth/me` is for
+revalidating state whenever the frontend already holds a valid access
+token, e.g. right after the onboarding wizard submits.
+
+**33. OAuth new-account creation didn't seed `avatar` from the provider
+picture.** `google.provider.ts`'s `fetchGoogleProfile` (and its GitHub/
+LinkedIn equivalents) already correctly mapped the provider's photo URL
+onto `OAuthProfile.avatar`. The intended fix was one line inside CASE 3 of
+`handleOAuthLogin`'s `User.create()` call:
+
+```ts
+username: `user_${crypto.randomBytes(5).toString("hex")}`,
+displayName: profile.displayName,
+...(profile.avatar ? { avatar: profile.avatar } : {}),   // <- this line
+role: UserRole.USER,
+isProfileComplete: false,
+```
+
+### Symptom
+
+```
+AssertionError: expected 'https://api.dicebear.com/9.x/identico…' to be 'https://provider.example.com/oauth-av…'
+```
+
+A brand-new OAuth signup's `avatar` came back as a freshly-generated
+identicon instead of the real provider photo, even though onboarding's
+avatar-priority logic (uploaded file → seeded OAuth avatar → generated
+identicon) was correct and the provider mapping was correct.
+
+### Root cause
+
+Not a logic bug — the line above was described and shared, but never
+actually applied to the working copy of `auth.services.ts`. Same root
+cause as the `/api/v1/user` vs `/api/v1/users` route-mount typo documented
+in `user-module-bug-history.md`: changes communicated as a zip download,
+rather than pasted inline for direct copy-paste, could silently fail to
+land. Static review of the "current" file kept coming back clean, because
+it genuinely was clean — it just wasn't the file actually running.
+
+### How it was actually found
+
+A plain assertion on the *final* onboarding response (`avatar` should
+equal the provider's picture) only said *that* something was wrong, not
+*where*. The fix was a diagnostic checkpoint added mid-test, querying the
+database directly right after the OAuth callback and before onboarding
+ran at all:
+
+```ts
+const seededUser = await User.findOne({ accountId: seededAccount!._id });
+expect(
+  seededUser?.avatar,
+  `User.avatar right after OAuth signup was: ${JSON.stringify(seededUser?.avatar)}`,
+).toBe("https://provider.example.com/oauth-avatar.png");
+```
+
+This split "is the seed missing" from "is onboarding failing to read a
+seed that's actually there" into two independently-checkable questions.
+The checkpoint failed with `null`, immediately ruling out the onboarding
+read path and pointing straight at `handleOAuthLogin`.
+
+### Fix
+
+Added the missing line to the actual working file. No test changes needed
+beyond the diagnostic checkpoint itself, which stayed in place — it's a
+legitimate regression guard now, not just a one-time diagnostic.
+
+---
+
 ## What this leaves
 
 Not bugs, but worth knowing alongside this list:
 
-- **The `users` module remains entirely unbuilt** — outlined in comments
-  only, no controller, no routes. Never in scope for this remediation.
+- **The `users` module is now built** (onboarding: username/avatar
+  wizard, `GET /auth/me`) — see `user-module-bug-history.md` for its own
+  bug history, separate from this one.
 - **Google/GitHub OAuth are covered by mocked Supertest tests; LinkedIn
   is covered by both manual testing and its own mocked test file.**
 - **`updatePassword` is fixed but still unexercised** — nothing in the

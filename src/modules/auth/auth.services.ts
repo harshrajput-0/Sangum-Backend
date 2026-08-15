@@ -12,7 +12,6 @@ import {
   verifyRefreshToken,
 } from "../../utils/generateTokens.js";
 
-
 import { env } from "../../config/env.js";
 import UserStats from "../users/userStat.model.js";
 
@@ -37,7 +36,7 @@ const toAuthUserResponse = (user: any, account: any): AuthUserResponse => ({
   role: user.role,
   isProfileComplete: user.isProfileComplete,
   isVerified: account.isVerified,
-  hasEmail: !account.needsEmail(),        // <-- frontend uses this to branch onboarding
+  hasEmail: !account.needsEmail(), // <-- frontend uses this to branch onboarding
 });
 
 // ============================================================
@@ -101,7 +100,7 @@ export const registerUser = async (
     const userStats = await authRepository.createUserStats(
       [{ userId: user._id }],
       session,
-    ); 
+    );
     // Fix Applied for - "userStats" possibly undefined error
     if (!userStats) throw ApiError.internal("Failed to create user stats");
 
@@ -110,10 +109,11 @@ export const registerUser = async (
     // Fire off verification email AFTER commit — never email the user
     // about an account that might still roll back.
 
-
-
-
-await sendVerificationEmail(account._id.toString(), email, user.displayName);
+    await sendVerificationEmail(
+      account._id.toString(),
+      email,
+      user.displayName,
+    );
 
     // Generate accessToken and refreshToken
     const accessToken = generateAccessToken({
@@ -133,11 +133,12 @@ await sendVerificationEmail(account._id.toString(), email, user.displayName);
 
     return {
       user: toAuthUserResponse(user, account),
-      accessToken, refreshToken
+      accessToken,
+      refreshToken,
       // refreshToken returned separately to the controller, which sets
       // it as a cookie — see auth.controller.ts → register
       // (not part of AuthResponse type because it never belongs in JSON)
-    } as AuthResponse ;
+    } as AuthResponse;
   } catch (error) {
     if (session.inTransaction()) {
       await session.abortTransaction();
@@ -244,7 +245,6 @@ export const refreshAccessToken = async (refreshToken: string) => {
   // find account
   const account = await authRepository.findByUserId(payload.userId);
 
-
   // if acount doesn't have refreshToken then session not found
   if (!account || !account.refreshToken) {
     throw ApiError.unauthorized("Session not found. Please login again");
@@ -312,7 +312,7 @@ export const getCurrentUser = async (
   }
 
   return toAuthUserResponse(user, account);
-}
+};
 
 // ============================================================
 // ----------------| FORGOT OR RESET PASSWORD |----------------
@@ -332,67 +332,77 @@ export const forgotPassword = async (email: string): Promise<void> => {
   await authRepository.setPasswordResetToken(
     account._id.toString(),
     hashToken(rawToken),
-    new Date(Date.now() + 60 * 60 * 1000)
+    new Date(Date.now() + 60 * 60 * 1000),
   );
 
- sendEmail({
-  to: email,
-  subject: "Reset your password",
-  html: resetPasswordTemplate(`${env.CLIENT_URL}/reset-password/${rawToken}`),
-}).catch((err) => console.error("Failed to send reset email:", err));
-}
+  sendEmail({
+    to: email,
+    subject: "Reset your password",
+    html: resetPasswordTemplate(`${env.CLIENT_URL}/reset-password/${rawToken}`),
+  }).catch((err) => console.error("Failed to send reset email:", err));
+};
 
-
-export const resetPassword = async (rawToken: string, newPassword: string): Promise<void> => {
-
-    console.log("raw token received:", JSON.stringify(rawToken), "length:", rawToken.length);
+export const resetPassword = async (
+  rawToken: string,
+  newPassword: string,
+): Promise<void> => {
+  console.log(
+    "raw token received:",
+    JSON.stringify(rawToken),
+    "length:",
+    rawToken.length,
+  );
   console.log("hashed to:", hashToken(rawToken));
   console.log("server's current time:", new Date().toISOString());
 
   // find by resetpasswordtoken
-  const account = await authRepository.findByPasswordResetToken(hashToken(rawToken));
+  const account = await authRepository.findByPasswordResetToken(
+    hashToken(rawToken),
+  );
   console.log("account found:", account ? account._id : null);
 
   // check if reset token to that account exist
-  if(!account) {
-    throw ApiError.badRequest("The token is invalid or expired")
+  if (!account) {
+    throw ApiError.badRequest("The token is invalid or expired");
   }
 
   // save the new password
-  account.password = newPassword
+  account.password = newPassword;
 
   // wait for account details to save
   await account.save();
-
 
   // clear reset password token once used
   await authRepository.clearPasswordResetToken(account._id.toString());
 
   // clear refresh token, to make existing session valid (especially if password is compromised)
   await authRepository.clearRefreshToken(account._id.toString());
-
-}
-
+};
 
 // ============================================================
 // ----------------| EMAIL VERIFICATION CODE |----------------
 // ============================================================
 export const verifyEmail = async (rawToken: string) => {
   // get account by verificaiton token
-  const account = await authRepository.findByVerificationToken(hashToken(rawToken));
+  const account = await authRepository.findByVerificationToken(
+    hashToken(rawToken),
+  );
 
   // check if verifcation account exist or not
-  if (!account){
-    throw ApiError.badRequest("Verification link is invalid or expired")
+  if (!account) {
+    throw ApiError.badRequest("Verification link is invalid or expired");
   }
 
-  // mark account as verified 
+  // mark account as verified
   await authRepository.markEmailVerified(account._id.toString());
-} 
-
+};
 
 // Currnetly added
-const sendVerificationEmail = async (accountId: string, email: string, displayName?: string) => {
+const sendVerificationEmail = async (
+  accountId: string,
+  email: string,
+  displayName?: string,
+) => {
   const rawToken = generateRandomToken();
   await authRepository.setEmailVerificationToken(
     accountId,
@@ -402,7 +412,10 @@ const sendVerificationEmail = async (accountId: string, email: string, displayNa
   sendEmail({
     to: email,
     subject: "Verify your email",
-    html: verificationTemplate(`${env.API_URL}/verify-email/${rawToken}`, displayName),
+    html: verificationTemplate(
+      `${env.API_URL}/verify-email/${rawToken}`,
+      displayName,
+    ),
   }).catch((err) => console.error("Failed to send verification email:", err));
 };
 
@@ -410,22 +423,21 @@ export const resendVerificationEmail = async (userId: string) => {
   // find account
   const account = await authRepository.findByUserId(userId);
 
-  // question account existence 
-  if (!account){
+  // question account existence
+  if (!account) {
     throw ApiError.notFound("Account Not Found");
   }
-  if (!account.email){
-    throw ApiError.badRequest("No email found in account")
+  if (!account.email) {
+    throw ApiError.badRequest("No email found in account");
   }
 
   // check if verified
-  if (account.isVerified){
+  if (account.isVerified) {
     throw ApiError.badRequest("Email is already verified");
   }
 
-    await sendVerificationEmail(account._id.toString(), account.email);   // Sends actual email
-
-} 
+  await sendVerificationEmail(account._id.toString(), account.email); // Sends actual email
+};
 
 // ============================================================
 // ---------------| HANDLE OAUTH LOGIN SERVICE |---------------
@@ -531,6 +543,11 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
           accountId,
           username: `user_${crypto.randomBytes(5).toString("hex")}`,
           displayName: profile.displayName,
+          // Seed from the OAuth provider's profile picture when available so
+          // onboarding step 2 (avatar) can default to it instead of falling
+          // back to a generated identicon. Local/email registration never
+          // has this, so `avatar` stays null there as before.
+          ...(profile.avatar ? { avatar: profile.avatar } : {}),
           role: UserRole.USER,
           isProfileComplete: false,
         },
@@ -615,5 +632,5 @@ export const completeEmail = async (
 
   // set email with account and email
   await authRepository.setEmail(account._id.toString(), email);
-  await sendVerificationEmail(account._id.toString(), email);    // Sends the actual mail
+  await sendVerificationEmail(account._id.toString(), email); // Sends the actual mail
 };

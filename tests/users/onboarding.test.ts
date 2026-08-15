@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import { createApp } from "../../src/app.js";
+import User from "../../src/modules/users/user.model.js";
+import Account from "../../src/modules/auth/account.model.js";
 
 vi.mock("axios");
 const mockedAxios = vi.mocked(axios, true);
@@ -38,6 +40,16 @@ async function getRealStateAndCookie() {
 }
 
 describe("POST /api/v1/users/onboarding", () => {
+  beforeEach(() => {
+    // Without this, a real upload() call recorded in one test (e.g. "uploads
+    // the avatar to Cloudinary...") stays in the mock's call history for
+    // every test after it, so "...not.toHaveBeenCalled()" assertions can
+    // fail on a call that happened in a completely different test.
+    mockedUpload.mockClear();
+    mockedAxios.get.mockClear();
+    mockedAxios.post.mockClear();
+  });
+
   it("completes onboarding with a provided username and fullName", async () => {
     const accessToken = await registerAndLogin("onboard.manual@example.com");
 
@@ -64,8 +76,12 @@ describe("POST /api/v1/users/onboarding", () => {
       .set("Authorization", `Bearer ${accessToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.data.username).toMatch(/^[a-z0-9_]{5,20}$/);
-    expect(res.body.data.username.startsWith("autogen")).toBe(true);
+    expect(res.body.data.username).toMatch(
+      /^(?![.-])(?!.*[.-]{2,})[a-z0-9_.-]{5,20}(?<![.-])$/,
+    );
+    // The email's local-part dot ("auto.gen") is now preserved rather than
+    // stripped, since dots are allowed mid-username as of the charset change.
+    expect(res.body.data.username.startsWith("auto.gen")).toBe(true);
     // fullName wasn't provided either, so it should fall back to the
     // final (generated) username, not stay blank.
     expect(res.body.data.displayName).toBe(res.body.data.username);
@@ -226,6 +242,21 @@ describe("POST /api/v1/users/onboarding", () => {
     const callbackRes = await request(app)
       .get(`/api/v1/auth/oauth/google/callback?code=fake-code&state=${state}`)
       .set("Cookie", cookie!);
+
+    // Checkpoint: verify the seed itself landed in the DB, BEFORE onboarding
+    // touches anything. If this fails, the bug is in handleOAuthLogin's
+    // CASE 3 (new-user creation). If this passes but the final assertion
+    // below still shows a generated identicon, the bug is in
+    // completeOnboarding's avatar-priority logic instead.
+    const seededAccount = await Account.findOne({
+      "authProviders.providerId": "google-user-avatar-seed",
+    });
+    expect(seededAccount, "OAuth account was never created").toBeTruthy();
+    const seededUser = await User.findOne({ accountId: seededAccount!._id });
+    expect(
+      seededUser?.avatar,
+      `User.avatar right after OAuth signup was: ${JSON.stringify(seededUser?.avatar)}`,
+    ).toBe("https://provider.example.com/oauth-avatar.png");
 
     const refreshCookie = getSetCookies(callbackRes);
 

@@ -237,6 +237,177 @@ function getSetCookies(res: request.Response): string[] {
 
 ---
 
+## 6. Infra: `tests/setup.ts` was missing env vars the app had since moved to
+
+**Category:** Testing infrastructure
+**Found by:** Every test file, simultaneously — first noticed while
+building `tests/users/onboarding.test.ts`
+
+### Symptom
+
+Every single test file failed at import time with `process.exit(1)`,
+before a single test ran — including files that had nothing to do with
+onboarding.
+
+### Root cause
+
+`env.ts`'s Zod schema requires `RESEND_API_KEY`, `EMAIL_FROM`, and
+`CONTACT_RECIPIENT_EMAIL` — added when email delivery moved from
+Gmail/nodemailer to Resend. `tests/setup.ts` still only set the old
+`EMAIL_USER`/`EMAIL_PASS` pair from before that migration, and was never
+updated alongside it. Not caused by the onboarding work — just never
+surfaced before because nobody had run the full suite since the email
+provider switched.
+
+### Fix
+
+```ts
+// tests/setup.ts
+process.env.RESEND_API_KEY = "test_resend_key";
+process.env.EMAIL_FROM = "test@example.com";
+process.env.CONTACT_RECIPIENT_EMAIL = "contact@example.com";
+```
+
+---
+
+## 7. Test bug: a discarded intermediate response turned one failure into a different one
+
+**Category:** Test-code correctness, not an app bug
+**Found by:** `tests/auth/me.test.ts` — "reflects isProfileComplete: true
+right after onboarding completes"
+
+### Symptom
+
+`GET /auth/me` came back `200` with `isProfileComplete: false`, right
+after an onboarding POST that was assumed to have succeeded. Read at face
+value, this looked like a `/auth/me` bug — reading stale state.
+
+### Root cause
+
+The test never checked the onboarding POST's own response:
+
+```ts
+// before
+await request(app).post("/api/v1/users/onboarding").set("Authorization", ...);
+const res = await request(app).get("/api/v1/auth/me").set("Authorization", ...);
+expect(res.body.data.isProfileComplete).toBe(true); // fails here
+```
+
+The onboarding call was actually returning `404` (see #8 below) — a
+completely different, upstream failure. `/auth/me` was working correctly
+the whole time; it was accurately reporting that onboarding had never run.
+
+### Fix
+
+Assert on every intermediate response in a multi-request test chain, not
+just the final one:
+
+```ts
+const onboardingRes = await request(app).post("/api/v1/users/onboarding").set(...);
+expect(
+  onboardingRes.status,
+  `onboarding POST failed: ${JSON.stringify(onboardingRes.body)}`,
+).toBe(200);
+```
+
+The custom failure message matters as much as the assertion itself — it's
+the difference between "here's exactly what broke" and a multi-step
+debugging session to work backwards from a symptom two requests removed
+from the cause. General rule going forward for this suite: any test that
+chains requests where a later assertion depends on an earlier one
+succeeding needs to assert on the earlier one too.
+
+---
+
+## 8. Infra: route-mount typo only visible once files were actually diffed
+
+**Category:** Process/workflow, surfaced as a routing bug
+**Found by:** The hardened test from #7, once it revealed the real status code
+
+### Symptom
+
+```
+AssertionError: onboarding POST failed: {}: expected 404 to be 200
+```
+
+Every onboarding test failed with a plain `404` — not a validation error,
+not an auth error, an actual "no route matched."
+
+### Root cause
+
+`src/app.ts` had:
+
+```ts
+app.use(`${API_PREFIX}/user`, userRoutes);   // singular — wrong
+```
+
+instead of
+
+```ts
+app.use(`${API_PREFIX}/users`, userRoutes);  // plural — matches every test/frontend call
+```
+
+Deeper cause: the onboarding module's files were shared as a downloadable
+zip rather than pasted inline. Reviewing "the file" for this bug kept
+coming back clean, because the file being reviewed and the file actually
+running weren't reliably the same one — a change described-and-zipped
+early in a long working session had silently failed to land in the real
+checkout. The exact same root cause produced bug #33 in
+`auth-module-bug-history.md` (missing OAuth avatar seed line) later in
+the same session, which is what finally made the pattern obvious. Fixed
+going forward by pasting every actual code change inline for direct
+copy-paste instead.
+
+### Fix
+
+One-character mount fix, plus a general process change (inline over zip)
+that mattered more than the fix itself.
+
+---
+
+## 9. Test bugs: a stale assertion and a leaking mock, both in `onboarding.test.ts`
+
+**Category:** Test-code correctness, not app bugs
+**Found by:** `tests/users/onboarding.test.ts`, same full-suite run as #6–8
+
+### 9a. Stale regex after a source change
+
+"auto-generates username and displayName when both are omitted" asserted
+`/^[a-z0-9_]{5,20}$/` and `.startsWith("autogen")`. Both predated the
+username-charset change that started allowing `.` and `-`. Once dots
+started surviving generation instead of being stripped,
+`auto.gen@example.com` correctly generated `auto.gen7831` — which the old
+assertions rejected as if it were a bug. Fixed by updating both to match
+the current charset and expect the dot. The lesson isn't really about this
+one test: a source-level validation change needs every test asserting on
+that exact shape swept for staleness, not just the tests written
+specifically to cover the change.
+
+### 9b. Mock call-history not cleared between tests
+
+"rejects a non-image file upload with 400" asserted
+`expect(mockedUpload).not.toHaveBeenCalled()` — and failed, even though
+the `400` rejection itself worked correctly. `mockedUpload`'s call history
+is cumulative across every test in the file unless explicitly cleared; the
+call recorded by the *previous* test ("uploads the avatar to Cloudinary
+when a file is provided", which legitimately calls `upload()` once) was
+still sitting in the mock's history when this test's assertion ran.
+
+```ts
+// fix — clear all mocks' call history before each test
+beforeEach(() => {
+  mockedUpload.mockClear();
+  mockedAxios.get.mockClear();
+  mockedAxios.post.mockClear();
+});
+```
+
+`mockClear()` specifically, not `mockReset()` — it clears recorded calls
+without touching queued `mockResolvedValueOnce(...)` implementations that
+other tests still depend on.
+
+---
+
 ## Summary
 
 | # | Issue | Category | Root cause | Fix |
@@ -246,8 +417,14 @@ function getSetCookies(res: request.Response): string[] {
 | 3 | Transactions failed on in-memory DB | Infra | Standalone MongoDB doesn't support transactions | `MongoMemoryReplSet` instead of `MongoMemoryServer` |
 | 4 | "Catalog changes" error, first write only | Infra | Collections can't be created implicitly inside a transaction | `Model.init()` for every model touched in a transaction, in `beforeAll` |
 | 5 | Two TS strictness flags in test code | Infra | Dynamic key indexing; `set-cookie` mistyped as `string` | Iterate `Object.values()`; typed `getSetCookies()` helper |
+| 6 | Every test file died at import, `RESEND_API_KEY` etc. missing | Infra | `tests/setup.ts` never updated when email moved to Resend | Added the missing env vars |
+| 7 | Onboarding POST's status silently discarded in a chained test | Test-code | Assumed success instead of asserting it | Assert on every intermediate response, not just the final one |
+| 8 | `/auth/me` test 404'd on a route that "should" exist | Process | Onboarding files shared via zip, one change never landed in the real checkout | Paste code inline going forward instead of zipping |
+| 9 | Stale regex + leaking mock, both in `onboarding.test.ts` | Test-code | Assertion not updated after a source change; mock history not cleared between tests | Updated regex/prefix; added `beforeEach` mock clearing |
 
-Only #1 represents a defect that shipped in application code. The rest are
-exactly the kind of environment friction that's worth documenting once,
-here, so the next test file added to this project doesn't have to
-rediscover any of it from scratch.
+Only #1 represents a defect that shipped in application code. Most of the
+rest are environment friction; #7 and #8 are about how the debugging
+itself went, kept here because the methodology — assert on intermediate
+steps, diff the actual file rather than trust a description of it — is
+the reusable part, worth remembering next time something "should" work
+and doesn't.
