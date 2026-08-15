@@ -4,14 +4,26 @@ import { uploadToCloudinary } from "../../utils/uploadToCloudinary.js";
 import * as userRepository from "./user.repository.js";
 import * as authRespository from "../auth/auth.repository.js";
 import { OnboardingPayload, OnboardingResponse } from "./user.types.js";
-import { email } from "zod";
 
 // ==============================================================
 // -------------------| USERNAME GENERATION |--------------------
 // ==============================================================
 
+// Strip everything the schema doesn't allow, keep it lowercase, collapse
+// runs of dots/hyphens down to one, and trim them off both ends — the
+// model now rejects leading/trailing/consecutive dots or hyphens, and an
+// email local-part like ".hidden" or "first..last" would otherwise violate
+// that on the very first generation attempt. Also leaves headroom for a
+// random numeric suffix so the final candidate still fits under 20 chars.
 const sanitizeUsernameBase = (raw: string): string => {
-  const cleaned = raw.toLocaleLowerCase().replace(/[^a-z0-9_]/g, "");
+  const cleaned = raw
+    .toLowerCase()
+    .replace(/[^a-z0-9_.-]/g, "")
+    .replace(/[.-]{2,}/g, (run) => run[0] as string)
+    .replace(/^[.-]+|[.-]+$/g, "");
+
+  // The 14-char slice can itself land right after a dot/hyphen (e.g.
+  // "abcdefghijklm.nopqr" -> "abcdefghijklm."), so trim again post-slice.
   return cleaned.slice(0, 14);
 };
 
@@ -33,9 +45,9 @@ const generateUniqueUsername = async (
     // on the same narrow number space.
     const suffixLength = attempt === 0 ? 4 : 6;
     const suffix = crypto
-      .randomInt(0, 10 ** suffixLength)
+      .randomInt(0, 10 ** suffixLength) // Generate reandom nuber
       .toString()
-      .padStart(suffixLength, "0");
+      .padStart(suffixLength, "0"); // pad if nuber is 03, 534 (doesn't match suffixLength)
 
     let candidate = `${base}${suffix}`;
 
@@ -46,11 +58,11 @@ const generateUniqueUsername = async (
       candidate = candidate.padEnd(5, "0");
     }
 
+    // Checking if usernaem is taken
     const taken = await userRepository.usernameExistsExcludingUser(
       candidate,
       excludeUserId,
     );
-
     if (!taken) return candidate;
   }
 
@@ -62,13 +74,13 @@ const generateUniqueUsername = async (
 // ==============================================================
 // --------------------| AVATAR RESOLUTION |---------------------
 // ==============================================================
+
 const generateIdentityIconUrl = (seed: string): string =>
   `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
 
 // ==============================================================
 // -------------------| USERNAME GENERATION |--------------------
 // ==============================================================
-
 export const completeOnboarding = async (
   userId: string,
   input: OnboardingPayload,
@@ -85,6 +97,8 @@ export const completeOnboarding = async (
 
   const account = await authRespository.findByUserId(userId);
 
+// Not reachable in normal flow, since email is guranteed
+// But guard just in case, something unexpexted happens 
   if (!account || !account.email) {
     throw ApiError.badRequest(
       "Add an email to your account before completing onboarding",
@@ -98,7 +112,6 @@ export const completeOnboarding = async (
       input.username,
       userId,
     );
-
     if (taken) {
       throw ApiError.conflict("This username is already taken");
     }
@@ -114,21 +127,15 @@ export const completeOnboarding = async (
   // Priority: uploaded file > already-seeded avatar (e.g. OAuth provider
   // picture) > generated identicon.
   let avatar: string | null = user.avatar ?? null;
-
   if (avatarFile) {
     const uploaded = await uploadToCloudinary(avatarFile.path);
-
     if (!uploaded) {
-        throw ApiError.internal("Failed to upload avatar");
+      throw ApiError.internal("Failed to upload avatar");
     }
     avatar = uploaded.secure_url;
-
-  }
-  else if (!avatar) {
+  } else if (!avatar) {
     avatar = generateIdentityIconUrl(username);
   }
-
-
 
   const updated = await userRepository.updateUser(userId, {
     username,

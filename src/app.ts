@@ -5,11 +5,13 @@ import cookieParser from "cookie-parser";
 import { Request, Response, NextFunction } from "express";
 
 import { env } from "./config/env.js";
+import ApiError from "./utils/ApiError.js";
 
 import authRoutes from "./modules/auth/auth.routes.js";
 import contactRoutes from "./modules/contact/contact.routes.js";
 import waitlistRountes from "./modules/waitlist/waitlist.routes.js";
-import ApiError from "./utils/ApiError.js";
+import userRoutes from "./modules/users/user.routes.js";
+
 
 export const createApp = (): Application => {
   const app = express();
@@ -32,6 +34,7 @@ export const createApp = (): Application => {
   const API_PREFIX = "/api/v1";
 
   app.use(`${API_PREFIX}/auth`, authRoutes);
+  app.use(`${API_PREFIX}/user`, userRoutes);
 
   app.use("/api", contactRoutes);
   app.use("/api", waitlistRountes);
