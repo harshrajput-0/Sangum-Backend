@@ -185,6 +185,22 @@ export const resendVerification = asyncHandler(
 );
 
 /**
+ * GET /auth/me  [authenticate]
+ *
+ * Returns the current user's latest state without changing anything.
+ * Uses the same response shape as login, register, and refresh-token.
+ * 
+ * It is safe to call whenever the frontend already has a valid access token
+ * and needs fresh user data—for example, to re-check
+ * isProfileComplete, isVerified, or hasEmail after onboarding.
+ */
+export const getMe = asyncHandler(async (req: Request, res: Response) => {
+  const user = await authService.getCurrentUser(req.user!.userId);
+
+  res.status(200).json(new ApiResponse(200, "Current user", user));
+});
+
+/**
  * POST /auth/complete-email  [authenticate]
  *
  * The endpoint a pending OAuth account (no email from provider) hits

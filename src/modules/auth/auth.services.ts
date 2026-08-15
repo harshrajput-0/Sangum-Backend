@@ -286,6 +286,35 @@ export const refreshAccessToken = async (refreshToken: string) => {
 };
 
 // ============================================================
+// -----------------| GET CURRENT USER (/me) |------------------
+// ============================================================
+// Read-only version of refreshAccessToken above.
+// It returns the same AuthUserResponse, but does not rotate tokens, set cookies,
+// or use the auth rate limiter.
+//
+// Use this whenever the frontend already has a valid access token and needs
+// the latest user state—for example, after completing onboarding or during
+// periodic revalidation.
+//
+// Unlike the refresh-token flow, this cannot be used on a cold page load because
+// the frontend does not have an access token yet.
+export const getCurrentUser = async (
+  userId: string,
+): Promise<AuthUserResponse> => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw ApiError.internal("User profile is missing for this user");
+  }
+
+  const account = await authRepository.findByUserId(userId);
+  if (!account) {
+    throw ApiError.internal("Account is missing for this user");
+  }
+
+  return toAuthUserResponse(user, account);
+}
+
+// ============================================================
 // ----------------| FORGOT OR RESET PASSWORD |----------------
 // ============================================================
 export const forgotPassword = async (email: string): Promise<void> => {
