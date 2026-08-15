@@ -48,8 +48,8 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1),
 
   // ==| EMAIL (Resend) |-------------------------------------------------------
-  // RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),                 // Temporary Disable
-  BREVO_API_KEY: z.string().min(1, "BREVO_API_KEY is required"),
+  RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),            
+  // BREVO_API_KEY: z.string().min(1, "BREVO_API_KEY is required"),
   EMAIL_FROM: z.string().email("EMAIL_FROM must be a valid email address"),
 
   // For Contact Form

@@ -19,6 +19,6 @@
     "skipLibCheck": true
   },
 
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test-brevo.mjs"],
   "exclude": ["node_modules", "dist", "tests", "SangamAssests"]
 }
