@@ -12,9 +12,12 @@ import contactRoutes from "./modules/contact/contact.routes.js";
 import waitlistRountes from "./modules/waitlist/waitlist.routes.js";
 import userRoutes from "./modules/users/user.routes.js";
 
-
 export const createApp = (): Application => {
   const app = express();
+
+  // Trust Render's reverse proxy so Express can resolve the real client IP
+  // from X-Forwarded-For (used by rate limiting and req.ip).
+  app.set("trust proxy", 1);
 
   app.use(
     helmet({
