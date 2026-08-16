@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
 import { createApp } from "../../src/app.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 const app = createApp();
 
@@ -14,7 +15,7 @@ const TEST_PASSWORD = "StrongPass123!";
 beforeEach(async () => {
   const res = await request(app)
     .post("/api/v1/auth/register")
-    .send({ email: TEST_EMAIL, password: TEST_PASSWORD });
+    .send({ email: TEST_EMAIL, password: TEST_PASSWORD, username: uniqueUsername() });
 
   // Fail loudly and immediately if setup itself is broken — otherwise every
   // test in this file quietly runs against an account that was never

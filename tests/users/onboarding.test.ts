@@ -5,6 +5,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { createApp } from "../../src/app.js";
 import User from "../../src/modules/users/user.model.js";
 import Account from "../../src/modules/auth/account.model.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 vi.mock("axios");
 const mockedAxios = vi.mocked(axios, true);
@@ -26,7 +27,7 @@ function getSetCookies(res: request.Response): string[] {
 async function registerAndLogin(email: string) {
   const res = await request(app)
     .post("/api/v1/auth/register")
-    .send({ email, password: "StrongPass123!" });
+    .send({ email, password: "StrongPass123!", username: uniqueUsername() });
   return res.body.data.accessToken as string;
 }
 

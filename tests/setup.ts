@@ -15,6 +15,7 @@ process.env.PORT = "5000";
 process.env.CLIENT_URL = "http://localhost:3000";
 process.env.JWT_ACCESS_SECRET = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 process.env.JWT_REFRESH_SECRET = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+process.env.JWT_EMAIL_VERIFICATION_SECRET = "cccccccccccccccccccccccccccccccc";
 process.env.GOOGLE_CLIENT_ID = "test";
 process.env.GOOGLE_CLIENT_SECRET = "test";
 process.env.GOOGLE_CALLBACK_URL = "http://localhost:5000/api/v1/auth/oauth/google/callback";
@@ -26,6 +27,13 @@ process.env.CLOUDINARY_API_KEY = "test";
 process.env.CLOUDINARY_API_SECRET = "test";
 process.env.EMAIL_USER = "test@example.com";
 process.env.EMAIL_PASS = "test";
+// Pre-existing gap: env.ts has required these since before this session's
+// changes, but setup.ts never set them, so the whole suite failed to boot
+// regardless of what was being tested. Fixed as a drive-by so tests could
+// actually run — not part of the verification/username work itself.
+process.env.SENDGRID_API_KEY = "test";
+process.env.EMAIL_FROM = "test@example.com";
+process.env.CONTACT_RECIPIENT_EMAIL = "test@example.com";
 
 
 process.env.MONGO_URI = "mongodb://localhost:27017/test"; // unused since setup.ts connects via replset.getUri() directly, but still required by the schema

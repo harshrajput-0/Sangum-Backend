@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { createApp } from "../../src/app.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 const app = createApp();
 
@@ -16,7 +17,7 @@ describe("POST /api/v1/auth/refresh-token", () => {
   it("issues a new access token and rotates the refresh cookie", async () => {
     const registerRes = await request(app)
       .post("/api/v1/auth/register")
-      .send({ email: "refresh.test@example.com", password: "StrongPass123!" });
+      .send({ email: "refresh.test@example.com", password: "StrongPass123!", username: uniqueUsername() });
 
     const cookie = registerRes.headers["set-cookie"];
     // Asserting this is real, not just casting past the type — if register
@@ -45,7 +46,7 @@ describe("POST /api/v1/auth/refresh-token", () => {
   it("rejects reuse of an already-rotated-out refresh token", async () => {
     const registerRes = await request(app)
       .post("/api/v1/auth/register")
-      .send({ email: "refresh.reuse@example.com", password: "StrongPass123!" });
+      .send({ email: "refresh.reuse@example.com", password: "StrongPass123!", username: uniqueUsername() });
 
     const originalCookie = registerRes.headers["set-cookie"];
     expect(originalCookie).toBeDefined();

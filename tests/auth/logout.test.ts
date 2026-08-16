@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { createApp } from "../../src/app.js";
 import Account from "../../src/modules/auth/account.model.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 const app = createApp();
 
@@ -9,7 +10,7 @@ describe("POST /api/v1/auth/logout", () => {
   it("logs out with a valid token and clears the stored refresh token", async () => {
     const registerRes = await request(app)
       .post("/api/v1/auth/register")
-      .send({ email: "logout.test@example.com", password: "StrongPass123!" });
+      .send({ email: "logout.test@example.com", password: "StrongPass123!", username: uniqueUsername() });
 
     const accessToken = registerRes.body.data.accessToken;
 
@@ -41,7 +42,7 @@ describe("POST /api/v1/auth/logout", () => {
     // bug can never quietly come back without a test catching it.
     const registerRes = await request(app)
       .post("/api/v1/auth/register")
-      .send({ email: "logout.malformed@example.com", password: "StrongPass123!" });
+      .send({ email: "logout.malformed@example.com", password: "StrongPass123!", username: uniqueUsername() });
 
     const res = await request(app)
       .post("/api/v1/auth/logout")

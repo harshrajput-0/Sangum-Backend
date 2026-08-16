@@ -1,13 +1,14 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { createApp } from "../../src/app.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 const app = createApp();
 
 async function registerAndLogin(email: string) {
   const res = await request(app)
     .post("/api/v1/auth/register")
-    .send({ email, password: "StrongPass123!" });
+    .send({ email, password: "StrongPass123!", username: uniqueUsername() });
   return res.body.data.accessToken as string;
 }
 

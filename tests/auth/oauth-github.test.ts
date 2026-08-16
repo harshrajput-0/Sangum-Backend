@@ -3,6 +3,7 @@ import request from "supertest";
 import axios from "axios";
 import { createApp } from "../../src/app.js";
 import Account from "../../src/modules/auth/account.model.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 vi.mock("axios");
 const mockedAxios = vi.mocked(axios, true);
@@ -120,7 +121,7 @@ describe("GET /api/v1/auth/oauth/github/callback", () => {
 
   it("links to an existing email/password account instead of duplicating it", async () => {
     const email = "githublink@example.com";
-    await request(app).post("/api/v1/auth/register").send({ email, password: "StrongPass123!" });
+    await request(app).post("/api/v1/auth/register").send({ email, password: "StrongPass123!", username: uniqueUsername() });
 
     const { state, cookie } = await getRealStateAndCookie();
     mockedAxios.post.mockResolvedValueOnce({ data: { access_token: "token" } });

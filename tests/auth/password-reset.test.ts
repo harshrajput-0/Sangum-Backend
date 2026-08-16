@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
 import { createApp } from "../../src/app.js";
 import { sendEmail } from "../../src/services/email.service.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 const app = createApp();
 const mockSendEmail = vi.mocked(sendEmail);
@@ -42,7 +43,7 @@ describe("POST /api/v1/auth/forgot-password", () => {
     const email = "forgot.test@example.com";
     await request(app)
       .post("/api/v1/auth/register")
-      .send({ email, password: "StrongPass123!" });
+      .send({ email, password: "StrongPass123!", username: uniqueUsername() });
     mockSendEmail.mockClear(); // registration also sends an email — ignore that one
 
     const res = await request(app)
@@ -65,7 +66,7 @@ describe("POST /api/v1/auth/reset-password/:token", () => {
 
     await request(app)
       .post("/api/v1/auth/register")
-      .send({ email, password: oldPassword });
+      .send({ email, password: oldPassword, username: uniqueUsername() });
     mockSendEmail.mockClear();
     await request(app).post("/api/v1/auth/forgot-password").send({ email });
 
@@ -80,7 +81,7 @@ describe("POST /api/v1/auth/reset-password/:token", () => {
     // The actual point: the OLD password must now be rejected...
     const oldLoginRes = await request(app)
       .post("/api/v1/auth/login")
-      .send({ email, password: oldPassword });
+      .send({ email, password: oldPassword, username: uniqueUsername() });
     expect(oldLoginRes.status).toBe(401);
 
     // ...and the NEW one must work.
@@ -94,7 +95,7 @@ describe("POST /api/v1/auth/reset-password/:token", () => {
     const email = "reset.reuse@example.com";
     await request(app)
       .post("/api/v1/auth/register")
-      .send({ email, password: "StrongPass123!" });
+      .send({ email, password: "StrongPass123!", username: uniqueUsername() });
     mockSendEmail.mockClear();
     await request(app).post("/api/v1/auth/forgot-password").send({ email });
 

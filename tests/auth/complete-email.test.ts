@@ -6,6 +6,7 @@ import Account, { AuthProvider } from "../../src/modules/auth/account.model.js";
 import User, { UserRole } from "../../src/modules/users/user.model.js";
 import { generateAccessToken } from "../../src/utils/generateTokens.js";
 import { sendEmail } from "../../src/services/email.service.js";
+import { uniqueUsername } from "../helpers/testUsers.js";
 
 const app = createApp();
 const mockSendEmail = vi.mocked(sendEmail);
@@ -74,7 +75,7 @@ describe("POST /api/v1/auth/complete-email", () => {
   it("rejects an email that's already taken by another account", async () => {
     await request(app)
       .post("/api/v1/auth/register")
-      .send({ email: "already.taken@example.com", password: "StrongPass123!" });
+      .send({ email: "already.taken@example.com", password: "StrongPass123!", username: uniqueUsername() });
 
     const { accessToken } = await createOAuthAccountWithNoEmail();
 
