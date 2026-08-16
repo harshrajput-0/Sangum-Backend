@@ -27,6 +27,15 @@ const envSchema = z.object({
     .min(32, "JWT_REFRESH_SECRET must be of 32 characters"),
   JWT_REFRESH_EXPIRY: z.custom<StringValue>().default("7d"),
 
+  // ==| EMAIL VERIFICATION TOKEN |-------------------------------------------
+  // Deliberately separate from JWT_ACCESS_SECRET/JWT_REFRESH_SECRET so an
+  // email-verification token can never be mistaken for (or forged against)
+  // an access/refresh token, even before the `purpose` claim is checked.
+  JWT_EMAIL_VERIFICATION_SECRET: z
+    .string()
+    .min(32, "JWT_EMAIL_VERIFICATION_SECRET must be of 32 characters"),
+  JWT_EMAIL_VERIFICATION_EXPIRY: z.custom<StringValue>().default("24h"),
+
   // ==| GOOGLE VARIABLE |-----------------------------------------------------
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),

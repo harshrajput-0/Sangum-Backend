@@ -52,6 +52,7 @@ export const createApp = (): Application => {
         statusCode,
         message: err.message || "Internal Server Error",
         errors: err.errors || [],
+        ...(err.code ? { code: err.code } : {}),
       });
     },
   );

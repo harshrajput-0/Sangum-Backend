@@ -13,6 +13,11 @@ export interface RefreshTokenPayload {
   userId: string;
 }
 
+export interface EmailVerificationTokenPayload {
+  accountId: string;
+  purpose: "email_verification";
+}
+
 // Generate Access Token
 export const generateAccessToken = (payload: AccessTokenPayload): string => {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
@@ -43,4 +48,38 @@ export const generateRefreshToken = (payload: RefreshTokenPayload): string => {
 // Verify Refresh Token
 export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
   return jwt.verify(token, env.JWT_REFRESH_SECRET) as RefreshTokenPayload;
+};
+
+// Generate Email Verification Token
+// Stateless on purpose — no DB write on issue, so sending a second
+// (resend) email can never invalidate a still-outstanding first one.
+// See docs/known-risks.md for the trade-off this implies.
+export const generateEmailVerificationToken = (accountId: string): string => {
+  const payload: EmailVerificationTokenPayload = {
+    accountId,
+    purpose: "email_verification",
+  };
+  return jwt.sign(payload, env.JWT_EMAIL_VERIFICATION_SECRET, {
+    expiresIn: env.JWT_EMAIL_VERIFICATION_EXPIRY,
+  });
+};
+
+// Verify Email Verification Token
+// Uses its own secret (never shared with access/refresh tokens) AND
+// checks `purpose` explicitly — belt and suspenders, so a token can't
+// be replayed against the wrong endpoint even if secrets were ever
+// accidentally reused down the line.
+export const verifyEmailVerificationToken = (
+  token: string,
+): EmailVerificationTokenPayload => {
+  const payload = jwt.verify(
+    token,
+    env.JWT_EMAIL_VERIFICATION_SECRET,
+  ) as EmailVerificationTokenPayload;
+
+  if (payload.purpose !== "email_verification") {
+    throw new Error("Invalid token purpose");
+  }
+
+  return payload;
 };

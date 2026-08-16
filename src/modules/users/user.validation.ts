@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  USERNAME_REGEX,
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_RULE_MESSAGE,
+} from "../../utils/username.js";
 
 // multipart/form-data sends absent fields as either missing keys OR empty
 // strings depending on the client, so we normalise both to "not provided"
@@ -7,18 +13,19 @@ import { z } from "zod";
 const emptyToUndefined = (val: unknown) => (val === "" ? undefined : val);
 
 export const onboardingSchema = z.object({
+  // Same rule as registerSchema (auth.validaton.ts) and user.model.ts —
+  // previously this had its own slightly-looser regex (allowed leading/
+  // trailing/consecutive underscores) that could pass here and still
+  // fail Mongoose's own `match` validator on save. See utils/username.ts.
   username: z.preprocess(
     emptyToUndefined,
     z
       .string()
       .trim()
       .toLowerCase()
-      .min(5, "Username require at least 5 characters")
-      .max(20, "Username cannot exceed 20 characters")
-      .regex(
-        /^(?![.-])(?!.*[.-]{2,})[a-z0-9_.-]+(?<![.-])$/,
-        "Username can contain lowercase letters, numbers, underscores, hyphens, and dots, but can't start or end with a hyphen/dot, or contain them consecutively",
-      )
+      .min(USERNAME_MIN_LENGTH, `Username require at least ${USERNAME_MIN_LENGTH} characters`)
+      .max(USERNAME_MAX_LENGTH, `Username cannot exceed ${USERNAME_MAX_LENGTH} characters`)
+      .regex(USERNAME_REGEX, USERNAME_RULE_MESSAGE)
       .optional(),
   ),
   fullName: z.preprocess(

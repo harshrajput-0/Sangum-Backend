@@ -2,11 +2,14 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import { AuthResponse, AuthUserResponse, OAuthProfile } from "./auth.types.js";
 import * as authRepository from "./auth.repository.js";
+import * as userRepository from "../users/user.repository.js";
 import ApiError from "../../utils/ApiError.js";
 import User, { UserRole } from "../users/user.model.js";
 import {
   generateAccessToken,
   generateRefreshToken,
+  generateEmailVerificationToken,
+  verifyEmailVerificationToken,
   AccessTokenPayload,
   RefreshTokenPayload,
   verifyRefreshToken,
@@ -39,18 +42,74 @@ const toAuthUserResponse = (user: any, account: any): AuthUserResponse => ({
   hasEmail: !account.needsEmail(), // <-- frontend uses this to branch onboarding
 });
 
+// How long an unverified account "holds" its email/username before a
+// fresh registration attempt is allowed to reclaim them. Must match
+// the copy in verification.template.ts ("This link expires in 24
+// hours") and JWT_EMAIL_VERIFICATION_EXPIRY in env — if either changes,
+// this should move with it.
+const PENDING_VERIFICATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+// Deletes a stale, never-verified account (and its User/UserStats rows)
+// so its email/username can be reused by a new registration. Only ever
+// called on accounts already confirmed to be unverified and older than
+// PENDING_VERIFICATION_WINDOW_MS — see registerUser below.
+const reclaimStaleAccount = async (staleAccount: {
+  _id: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+}): Promise<void> => {
+  await User.findByIdAndDelete(staleAccount.userId);
+  await UserStats.findOneAndDelete({ userId: staleAccount.userId });
+  await authRepository.deleteAccountById(staleAccount._id.toString());
+};
+
 // ============================================================
 // ------------| REGISTERATION : Email + Password |------------
 // ============================================================
 export const registerUser = async (
   email: string,
   password: string,
+  username: string,
 ): Promise<AuthResponse> => {
+  // Username conflict gets the same treatment as email below — checked
+  // up front, friendly 409, nothing left to a raw Mongo E11000 mid-transaction.
+  const usernameTaken = await userRepository.usernameExist(username);
+  if (usernameTaken) {
+    throw ApiError.conflict("This username is already taken");
+  }
+
   const existing = await authRepository.findByEmail(email);
 
-  // Checking if account exist
   if (existing) {
-    throw ApiError.conflict("An account with this email already exist");
+    if (existing.isVerified) {
+      throw ApiError.conflict("An account with this email already exist");
+    }
+
+    // Unverified account already sitting on this email — how we handle
+    // it depends on whether it's still inside its own verification
+    // window (see auth-module-bug-history.md-style writeup in
+    // docs/known-risks.md for the full reasoning).
+    const accountAgeMs = Date.now() - existing.createdAt.getTime();
+
+    if (accountAgeMs < PENDING_VERIFICATION_WINDOW_MS) {
+      // Still within the window we told them the link is good for.
+      // Don't hard-error — resend a fresh (still-valid) link as a
+      // courtesy and tell the frontend exactly what happened via `code`
+      // so it can route to the "check your inbox" screen instead of
+      // showing a generic red form error.
+      //
+      // No dedicated cooldown on this specific path yet — tracked in
+      // docs/known-risks.md ("auto-resend on register conflict").
+      await sendVerificationEmail(existing._id.toString(), email, undefined);
+      throw ApiError.conflict(
+        "An account with this email already exists but isn't verified. We sent a fresh verification link.",
+        "ACCOUNT_PENDING_VERIFICATION",
+      );
+    }
+
+    // Past the window and still unverified — the original link is dead
+    // either way, so this email (and whatever username it was holding)
+    // is fair game. Wipe it and fall through to a normal registration.
+    await reclaimStaleAccount(existing);
   }
 
   // BUG FIX - session start
@@ -68,7 +127,7 @@ export const registerUser = async (
         {
           _id: userId,
           accountId,
-          username: `user_${crypto.randomBytes(5).toString("hex")}`,
+          username,
           displayName: email.split("@")[0] ?? email, // Bug fix fall back
           role: UserRole.USER,
           isProfileComplete: false,
@@ -382,38 +441,46 @@ export const resetPassword = async (
 // ============================================================
 // ----------------| EMAIL VERIFICATION CODE |----------------
 // ============================================================
+// Verification tokens are stateless JWTs (utils/generateTokens.ts) —
+// there's nothing stored in the DB to look up or overwrite. This means:
+//  - Resending never invalidates a still-outstanding earlier link
+//    (each JWT is independently valid until its own expiry).
+//  - Re-clicking an already-used link is a safe no-op, not an error —
+//    important now that multiple valid links can be outstanding at once.
 export const verifyEmail = async (rawToken: string) => {
-  // get account by verificaiton token
-  const account = await authRepository.findByVerificationToken(
-    hashToken(rawToken),
-  );
+  let payload;
+  try {
+    payload = verifyEmailVerificationToken(rawToken);
+  } catch {
+    throw ApiError.badRequest("Verification link is invalid or expired");
+  }
 
-  // check if verifcation account exist or not
+  const account = await authRepository.findById(payload.accountId);
   if (!account) {
     throw ApiError.badRequest("Verification link is invalid or expired");
   }
 
-  // mark account as verified
+  // Idempotent: an already-verified account hitting this again (e.g. an
+  // older link clicked after a newer one already verified them) just
+  // succeeds quietly instead of erroring.
+  if (account.isVerified) {
+    return;
+  }
+
   await authRepository.markEmailVerified(account._id.toString());
 };
 
-// Currnetly added
 const sendVerificationEmail = async (
   accountId: string,
   email: string,
   displayName?: string,
 ) => {
-  const rawToken = generateRandomToken();
-  await authRepository.setEmailVerificationToken(
-    accountId,
-    hashToken(rawToken),
-    new Date(Date.now() + 24 * 60 * 60 * 1000),
-  );
+  const token = generateEmailVerificationToken(accountId);
   sendEmail({
     to: email,
     subject: "Verify your email",
     html: verificationTemplate(
-      `${env.API_URL}/verify-email/${rawToken}`,
+      `${env.CLIENT_URL}/verify-email/${token}`,
       displayName,
     ),
   }).catch((err) => console.error("Failed to send verification email:", err));

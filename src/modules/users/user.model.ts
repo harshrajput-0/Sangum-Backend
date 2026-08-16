@@ -1,4 +1,10 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
+import {
+  USERNAME_REGEX,
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_RULE_MESSAGE,
+} from "../../utils/username.js";
 
 // ==| ENUM |────────────────────────────────────────────────────────────────
 
@@ -93,13 +99,10 @@ const userSchema = new Schema<IUser>(
       required: [true, "Username is required"],
       unique: true,
       trim: true,
-      toLowerCase: true,
-      minlength: [5, "Username require at least 5 characters"],
-      maxlength: [20, "Username cannot exceed 20 characters"],
-      match: [
-        /^[a-z0-9_]+$/,
-        "Username can only contain lowercase letters, numbers, and underscores",
-      ],
+      lowercase: true, // was `toLowerCase: true` — not a real Mongoose option, silently did nothing
+      minlength: [USERNAME_MIN_LENGTH, `Username require at least ${USERNAME_MIN_LENGTH} characters`],
+      maxlength: [USERNAME_MAX_LENGTH, `Username cannot exceed ${USERNAME_MAX_LENGTH} characters`],
+      match: [USERNAME_REGEX, USERNAME_RULE_MESSAGE],
       index: true,
     },
 

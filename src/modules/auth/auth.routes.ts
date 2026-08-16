@@ -34,13 +34,19 @@ router.post(
   authController.resetPassword,
 );
 
-router.get(
+router.post(
   "/verify-email/:token",
+  authRateLimit,
   validate(tokenParamSchema, "params"),
   authController.verifyEmail,
 );
 
-router.post("/resend-verification", authenticate, authController.resendVerification);
+router.post(
+  "/resend-verification",
+  authRateLimit,
+  authenticate,
+  authController.resendVerification,
+);
 
 router.get("/me", authenticate, authController.getMe);
 

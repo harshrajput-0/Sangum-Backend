@@ -17,8 +17,11 @@ export const findByUserId = (userId: string) => {
 };
 
 // find by accountId
+// (was previously calling findById({ accountId }) — passing an object
+// where Mongoose expects a plain id string, so this always returned
+// null. Fixed here since verifyEmail now depends on it directly.)
 export const findById = (accountId: string) => {
-  return Account.findById({ accountId }).select(" +refreshToken ");
+  return Account.findById(accountId).select("+refreshToken");
 };
 
 export const findByOAuthProvider = (
@@ -82,35 +85,11 @@ export const clearPasswordResetToken = (accountId: string) => {
   });
 };
 
-// Setting emailVerification fields
-export const setEmailVerificationToken = (
-  accountId: string,
-  hashedToken: string,
-  expiry: Date,
-) => {
-  return Account.findByIdAndUpdate(accountId, {
-    emailVerificationToken: hashedToken, // was emailVerificationToken
-    emailVerificationExpiry: expiry,
-  });
-};
-
-// Find using emailverificationToken
-export const findByVerificationToken = (hashedToken: string) => {
-  return Account.findOne({
-    emailVerificationToken: hashedToken,
-    emailVerificationExpiry: { $gt: new Date() },
-  }).select("+emailVerificationToken +emailVerificationExpiry"); // was emailVerificationToken
-};
-
 // Mark if emailVerified or not
+// Verification tokens are stateless JWTs now (see utils/generateTokens.ts)
+// — nothing to $unset here, there's no DB-side token to clear.
 export const markEmailVerified = (accountId: string) => {
-  return Account.findByIdAndUpdate(accountId, {
-    isVerified: true,
-    $unset: {
-      emailVerificationToken: 1,
-      emailVerificationExpiry: 1,
-    },
-  });
+  return Account.findByIdAndUpdate(accountId, { isVerified: true });
 };
 
 // Updating the Password
@@ -144,4 +123,11 @@ export const setEmail = (accountId: string, email: string) => {
 // Check Email in Account
 export const checkEmailExists = (email: string) => {
   return Account.exists({ email });
+};
+
+// Delete an account outright — used only when reclaiming a stale,
+// never-verified registration older than the verification window (see
+// registerUser's conflict branch in auth.services.ts).
+export const deleteAccountById = (accountId: string) => {
+  return Account.findByIdAndDelete(accountId);
 };

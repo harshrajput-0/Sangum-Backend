@@ -30,8 +30,6 @@ export interface IAccount extends Document {
   refreshToken?: string;
   passwordResetToken?: string;
   passwordResetExpiry?: Date;
-  emailVerificationToken?: string;
-  emailVerificationExpiry?: Date;
   lastLogin?: Date;
   loginAttempts: number;
   lockUntil?: Date;
@@ -129,18 +127,6 @@ const accountSchema = new Schema<IAccount>(
       default: null,
     },
 
-    emailVerificationToken: {
-      type: String,
-      select: false,
-      default: null,
-    },
-
-    emailVerificationExpiry: {
-      type: Date,
-      select: false,
-      default: null,
-    },
-
     lastLogin: {
       type: Date,
       default: null,
@@ -169,7 +155,6 @@ const accountSchema = new Schema<IAccount>(
 accountSchema.index({ email: 1 }, { unique: true, sparse: true });
 
 accountSchema.index({ passwordResetToken: 1 }, { sparse: true });
-accountSchema.index({ emailVerificationToken: 1 }, { sparse: true });
 
 //-----|Quick check if account with exist for this provider with this providerId|
 accountSchema.index({

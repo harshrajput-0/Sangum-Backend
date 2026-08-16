@@ -40,11 +40,11 @@ const setRefreshCookie = (res: Response, token: string) => {
 // ============================================================
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  // get email and password
-  const { email, password } = req.body;
+  // get email, password, username
+  const { email, password, username } = req.body;
 
   // Call registerUser funtion in auth.service.ts
-  const result = await authService.registerUser(email, password);
+  const result = await authService.registerUser(email, password, username);
 
   // setCookies using refreshToken
   setRefreshCookie(res, result.refreshToken);
@@ -165,15 +165,16 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   const { token } = req.params;
 
   if (typeof token !== "string") {
-    res.status(400).json({ message: "Invalid verification token" });
-    return;
+    throw ApiError.badRequest("Invalid verification token");
   }
 
   await authService.verifyEmail(token);
 
-  // This route is hit by the user clicking a link in their email, so we
-  // redirect to the frontend rather than returning raw JSON.
-  res.redirect(`${env.CLIENT_URL}/login?verified=true`);
+  // Now called via fetch from a frontend page (the user has to click a
+  // "Verify email" button there — see verify-email/[token]/page.tsx),
+  // not hit directly by browser navigation, so this returns JSON that
+  // page can react to instead of redirecting itself.
+  res.status(200).json(new ApiResponse(200, "Email verified successfully", null));
 });
 
 export const resendVerification = asyncHandler(
