@@ -61,6 +61,11 @@ export const generateEmailVerificationToken = (accountId: string): string => {
   };
   return jwt.sign(payload, env.JWT_EMAIL_VERIFICATION_SECRET, {
     expiresIn: env.JWT_EMAIL_VERIFICATION_EXPIRY,
+    // Two tokens signed in the same second would otherwise be byte-for-byte
+    // identical (same payload, same iat/exp) — jwtid guarantees each
+    // issuance is distinct regardless of timing. Not used for revocation
+    // (still stateless, see docs/known-risks.md) — purely for uniqueness.
+    jwtid: crypto.randomUUID(),
   });
 };
 

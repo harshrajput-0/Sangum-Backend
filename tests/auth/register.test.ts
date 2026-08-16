@@ -163,10 +163,14 @@ describe("POST /api/v1/auth/register", () => {
         password: "StrongPass123!",
         username: uniqueUsername(),
       });
-      // Simulate the account having been created >24h ago.
-      await Account.updateOne(
+      // Simulate the account having been created >24h ago. Goes through
+      // the native driver (Account.collection), not Mongoose's updateOne
+      // — the timestamps:true plugin on this schema hooks update queries
+      // and was clobbering a Mongoose-level createdAt override back to
+      // "now" before the service ever read it.
+      await Account.collection.updateOne(
         { email },
-        { createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000) },
+        { $set: { createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000) } },
       );
 
       const newUsername = uniqueUsername("reclaimed");
