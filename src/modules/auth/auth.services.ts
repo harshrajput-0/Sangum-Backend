@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { AuthResponse, AuthUserResponse, OAuthProfile } from "./auth.types.js";
 import * as authRepository from "./auth.repository.js";
 import * as userRepository from "../users/user.repository.js";
+import { generateUniqueUsername } from "../users/user.services.js";
 import ApiError from "../../utils/ApiError.js";
 import User, { UserRole } from "../users/user.model.js";
 import {
@@ -592,7 +593,7 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
     }
   }
 
-  // ===[ CASE 3 - Creating user ]---------------------------------
+// ===[ CASE 3 - Creating user ]---------------------------------
   // start session
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -608,7 +609,7 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
         {
           _id: userId,
           accountId,
-          username: `user_${crypto.randomBytes(5).toString("hex")}`,
+          username: await generateUniqueUsername(profile.email ?? profile.displayName),
           displayName: profile.displayName,
           // Seed from the OAuth provider's profile picture when available so
           // onboarding step 2 (avatar) can default to it instead of falling

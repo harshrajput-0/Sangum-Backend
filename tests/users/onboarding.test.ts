@@ -69,23 +69,32 @@ describe("POST /api/v1/users/onboarding", () => {
     expect(res.body.data.avatar).toContain("seed=cool_uma_99");
   });
 
-  it("auto-generates username and displayName when both are omitted", async () => {
-    const accessToken = await registerAndLogin("auto.gen@example.com");
+  it("keeps the registration-time username and displayName when both are omitted at onboarding", async () => {
+    // Not using registerAndLogin() here since this test needs to know
+    // the exact username that was chosen at registration, to assert
+    // onboarding didn't discard it.
+    const registeredUsername = uniqueUsername("regtime");
+    const registerRes = await request(app).post("/api/v1/auth/register").send({
+      email: "keeps.registered.username@example.com",
+      password: "StrongPass123!",
+      username: registeredUsername,
+    });
+    const accessToken = registerRes.body.data.accessToken as string;
 
     const res = await request(app)
       .post("/api/v1/users/onboarding")
       .set("Authorization", `Bearer ${accessToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.data.username).toMatch(
-      /^(?![.-])(?!.*[.-]{2,})[a-z0-9_.-]{5,20}(?<![.-])$/,
-    );
-    // The email's local-part dot ("auto.gen") is now preserved rather than
-    // stripped, since dots are allowed mid-username as of the charset change.
-    expect(res.body.data.username.startsWith("auto.gen")).toBe(true);
-    // fullName wasn't provided either, so it should fall back to the
-    // final (generated) username, not stay blank.
-    expect(res.body.data.displayName).toBe(res.body.data.username);
+    // This is the actual regression this test exists for: previously,
+    // submitting onboarding without a username (e.g. the prefill never
+    // loaded because the session was lost on a page refresh) silently
+    // replaced the real, already-chosen username with a fresh random
+    // one — see user.services.ts's completeOnboarding for the fix.
+    expect(res.body.data.username).toBe(registeredUsername.toLowerCase());
+    // fullName wasn't provided either, so displayName falls back to the
+    // (preserved) username, not a freshly generated one.
+    expect(res.body.data.displayName).toBe(registeredUsername.toLowerCase());
   });
 
   it("treats blank form fields the same as omitted fields", async () => {
@@ -160,22 +169,6 @@ describe("POST /api/v1/users/onboarding", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.username).toBe("uma.the-builder");
-  });
-
-  it("auto-generates a valid username from a dotted email local-part", async () => {
-    // "first.last" used to have its dot stripped entirely; now it should
-    // survive, but the generated username must still never start/end with
-    // it or contain it consecutively.
-    const accessToken = await registerAndLogin("first.last@example.com");
-
-    const res = await request(app)
-      .post("/api/v1/users/onboarding")
-      .set("Authorization", `Bearer ${accessToken}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.username).toMatch(
-      /^(?![.-])(?!.*[.-]{2,})[a-z0-9_.-]+(?<![.-])$/,
-    );
   });
 
   it("uploads the avatar to Cloudinary when a file is provided", async () => {

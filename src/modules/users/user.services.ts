@@ -27,7 +27,7 @@ const sanitizeUsernameBase = (raw: string): string => {
   return cleaned.slice(0, 14);
 };
 
-const generateUniqueUsername = async (
+export const generateUniqueUsername = async (
   email: string,
   excludeUserId?: string,
 ): Promise<string> => {
@@ -116,7 +116,19 @@ export const completeOnboarding = async (
       throw ApiError.conflict("This username is already taken");
     }
     username = input.username;
+  } else if (user.username) {
+    // Nothing submitted for this field — keep whatever the account
+    // already has (set at registration) instead of discarding it for a
+    // fresh random one. Previously this always regenerated on a blank
+    // submission, which silently overwrote a real, already-chosen
+    // username whenever the onboarding form happened to render without
+    // its prefill (e.g. the session store lost its in-memory state on a
+    // page refresh — see docs/known-risks.md).
+    username = user.username;
   } else {
+    // Genuinely no username on the account at all. Shouldn't happen via
+    // the normal register flow anymore, but kept as a safety net for
+    // any other account-creation path that might still skip it.
     username = await generateUniqueUsername(account.email, userId);
   }
 
