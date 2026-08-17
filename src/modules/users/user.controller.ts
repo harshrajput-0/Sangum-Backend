@@ -26,3 +26,57 @@ export const completeOnboarding = asyncHandler(
         res.status(200).json(new ApiResponse(200, "Onboarding completed", result));
     },
 );
+
+
+
+
+
+
+// ========================================================================
+// ------------------------------| PROFILE |-------------------------------
+// ========================================================================
+export const getProfile = asyncHandler( async(req: Request, res: Response) => {
+    const { username } = req.params as {username: string};
+
+    const result = await userService.getProfileByUsername(username, req.user?.userId);
+
+    res.status(200).json(new ApiResponse(200, "Profile Updated", result));
+});
+
+export const updateProfile = asyncHandler(
+    async (req: Request, res: Response) => {
+        const result = await userService.updateProfile(req.user!.userId, req.body);
+
+        res.status(200).json(
+            new ApiResponse(200, "Profile Updated", result)
+        );
+    },
+);
+
+export const uploadAvatar = asyncHandler(
+    async ( req: Request, res: Response ) => {
+        if (!req.file) {
+            throw ApiError.badRequest("No avatar file provided");
+        }
+
+        const result = await userService.updateAvatar(req.user!.userId, req.file);
+
+        res.status(200).json(
+            new ApiResponse(200, "Avatar Updated", result)
+        );
+    },
+);
+
+export const uploadCover = asyncHandler(
+    async ( req: Request, res: Response ) => {
+        if (!req.file) {
+            throw ApiError.badRequest("No cover image file provided");
+        }
+
+        const result = await userService.updateCover(req.user!.userId, req.file);
+
+        res.status(200).json(
+            new ApiResponse(200, "Cover Image Updated", result)
+        );
+    },
+);

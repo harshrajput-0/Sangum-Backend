@@ -3,7 +3,14 @@ import ApiError from "../../utils/ApiError.js";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary.js";
 import * as userRepository from "./user.repository.js";
 import * as authRespository from "../auth/auth.repository.js";
-import { OnboardingPayload, OnboardingResponse } from "./user.types.js";
+import {
+  OnboardingPayload,
+  OnboardingResponse,
+  UpdateProfilePayloads,
+  UserProfileResponse,
+} from "./user.types.js";
+import { IUser } from "./user.model.js";
+import { partial } from "zod/mini";
 
 // ==============================================================
 // -------------------| USERNAME GENERATION |--------------------
@@ -97,8 +104,8 @@ export const completeOnboarding = async (
 
   const account = await authRespository.findByUserId(userId);
 
-// Not reachable in normal flow, since email is guranteed
-// But guard just in case, something unexpexted happens 
+  // Not reachable in normal flow, since email is guranteed
+  // But guard just in case, something unexpexted happens
   if (!account || !account.email) {
     throw ApiError.badRequest(
       "Add an email to your account before completing onboarding",
@@ -166,4 +173,125 @@ export const completeOnboarding = async (
     avatar: updated.avatar ?? null,
     isProfileComplete: updated.isProfileComplete,
   };
+};
+
+// ========================================================================
+// ------------------------------| PROFILE |-------------------------------
+// ========================================================================
+
+const toProfileResponse = (
+  user: IUser,
+  viewerUserId?: string,
+): UserProfileResponse => ({
+  _id: user._id.toString(),
+  username: user.username,
+  displayName: user.displayName,
+  avatar: user.avatar ?? null,
+  banner: user.banner ?? null,
+  bio: user.bio ?? null,
+  location: user.location ?? null,
+  socialLinks: user.socialLinks ?? {},
+  role: user.role,
+  // awardedAt mirrors
+  badges: user.badges.map((b) => ({ type: b.types, awardedAt: b.awardedAt })),
+  isOnline: user.isOnline,
+  lastSeen: user.lastSeen,
+  createdAt: user.createdAt,
+  ...(viewerUserId
+    ? { isOwnProfile: viewerUserId === user._id.toString() }
+    : {}),
+});
+
+// ---- Get Profile using Usernaem -----------------------------
+export const getProfileByUsername = async (
+  username: string,
+  viewerUserId?: string,
+): Promise<UserProfileResponse> => {
+  const user = await userRepository.findByUsername(username);
+
+  if (!user) {
+    throw ApiError.notFound("User not found");
+  }
+
+  return toProfileResponse(user, viewerUserId);
+};
+
+// ------ Update Profile -----------------------------
+export const updateProfile = async (
+  userId: string,
+  payload: UpdateProfilePayloads,
+) => {
+  const updateData: Partial<IUser> = {};
+
+  if (payload.displayName !== undefined)
+    updateData.displayName = payload.displayName;
+  if (payload.bio !== undefined) updateData.bio = payload.bio;
+  if (payload.location !== undefined) updateData.location = payload.location;
+
+  if (payload.socialLinks !== undefined) {
+    const links: typeof updateData.socialLinks = {};
+    if (payload.socialLinks.twitter !== undefined)
+      links.twitter = payload.socialLinks.twitter;
+    if (payload.socialLinks.github !== undefined)
+      links.github = payload.socialLinks.github;
+    if (payload.socialLinks.linkedin !== undefined)
+      links.linkedin = payload.socialLinks.linkedin;
+    if (payload.socialLinks.website !== undefined)
+      links.website = payload.socialLinks.website;
+    if (payload.socialLinks.youtube !== undefined)
+      links.youtube = payload.socialLinks.youtube;
+
+    updateData.socialLinks = links;
+  }
+
+  const updated = await userRepository.updateUser(userId, updateData);
+
+  if (!updated) {
+    throw ApiError.notFound("User not found");
+  }
+
+  return toProfileResponse(updated, userId);
+};
+
+// ==============================================================
+// -------------------| AVATAR/COVER UPLOAD |--------------------
+// ==============================================================
+export const updateAvatar = async (
+  userId: string,
+  file: Express.Multer.File,
+): Promise<{ url: string }> => {
+  const uploaded = await uploadToCloudinary(file.path);
+  if (!uploaded) {
+    throw ApiError.internal("Failed to upload avatar");
+  }
+
+  const updated = await userRepository.updateUser(userId, {
+    avatar: uploaded.secure_url,
+  });
+
+  if (!updated) {
+    throw ApiError.notFound("User not Found");
+  }
+
+  return { url: uploaded.secure_url };
+};
+
+export const updateCover = async (
+  userId: string,
+  file: Express.Multer.File,
+): Promise<{ url: string }> => {
+  const uploaded = await uploadToCloudinary(file.path);
+  if (!uploaded) {
+    throw ApiError.internal("Failed to upload cover image");
+  }
+
+  const updated = await userRepository.updateUser(userId, {
+    banner: uploaded.secure_url,
+  });
+
+  if (!updated) {
+    throw ApiError.notFound("User not Found");
+  }
+
+  return { url: uploaded.secure_url };
 };
