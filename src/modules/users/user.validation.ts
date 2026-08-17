@@ -44,7 +44,7 @@ export const updateProfileSchema = z.object({
   bio: z.string().trim().max(300).optional(),
   location: z.string().trim().max(100).optional(),
 
-  socialLinkes: z
+  socialLinks: z
     .object({
       twitter: z.string().trim().max(200).optional(),
       github: z.string().trim().max(200).optional(),
