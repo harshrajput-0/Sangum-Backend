@@ -25,7 +25,7 @@ export enum BadgeType {
 
 export interface ISocialLinks {
   github?: string;
-  linkedIn?: string;
+  linkedin?: string;
   twitter?: string;
   website?: string;
   youtube?: string;
@@ -62,7 +62,7 @@ export interface IUser extends Document {
 const socialLinksSchema = new Schema<ISocialLinks>(
   {
   github: { type: String, trim: true },
-  linkedIn: { type: String, trim: true },
+  linkedin: { type: String, trim: true },
   twitter: { type: String, trim: true },
   website: { type: String, trim: true },
   youtube: { type: String, trim: true },
