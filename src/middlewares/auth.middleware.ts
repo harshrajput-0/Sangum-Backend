@@ -41,7 +41,7 @@ export const optionalAuthenticate = (
   // matched a valid Authorization header, causing optionalAuthenticate() to
   // silently skip req.user for every request (e.g. GET /users/:username's
   // isOwnProfile).
-  if (schema !== "Bearer " || !token) {
+  if (schema !== "Bearer" || !token) {
     return next();
   }
 
