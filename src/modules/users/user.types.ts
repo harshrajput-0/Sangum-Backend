@@ -40,7 +40,7 @@ export interface UserProfileResponse {
     location: string | null;
     socialLinks: ISocialLinks;
     role: UserRole;
-    badges: { type: string, awardedAi: Date }[];
+    badges: { type: string, awardedAt: Date }[];
     isOnline: boolean;
     lastSeen: Date;
     createdAt: Date;
