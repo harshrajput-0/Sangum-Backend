@@ -60,12 +60,13 @@ router.post(
 
 router.post(
   "/change-password",
+  authRateLimit,
   authenticate,
   validate(changePasswordSchema),
   authController.changePassword,
 );
 
-router.post(
+router.get(
   "/connected-accounts",
   authenticate,
   authController.getConnectedAccounts,
