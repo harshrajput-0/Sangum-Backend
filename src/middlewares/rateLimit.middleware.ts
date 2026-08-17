@@ -10,7 +10,7 @@ export const authRateLimit = rateLimit({
   max: 10, // 10 attempts per IP per window
   standardHeaders: true,
   legacyHeaders: false,
-  // skip: () => env.NODE_ENV === "test", // 👈 Only for testing purpose
+  skip: () => env.NODE_ENV === "test", // 👈 Only for testing purpose
   message: {
     success: false,
     statusCode: 429,

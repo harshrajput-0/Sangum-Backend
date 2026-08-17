@@ -8,6 +8,13 @@ import ApiError from "../../utils/ApiError.js";
 
 const router = Router();
 
+
+
+
+
+
+
+
 const handleSingleUpload = (uploader: typeof uploadAvatar, fieldName: string) =>
     (req: Request, res: Response, next: NextFunction) => {
         uploader.single(fieldName)(req, res, (err: unknown) => {
@@ -24,14 +31,13 @@ const handleSingleUpload = (uploader: typeof uploadAvatar, fieldName: string) =>
 const handleAvatarUpload = handleSingleUpload(uploadAvatar, "avatar");
 const handleCoverUpload = handleSingleUpload(uploadCover, "cover");
 
-
 router.post("/onboarding", authenticate, handleAvatarUpload, validate(onboardingSchema), userController.completeOnboarding);
 
 // ===[ Profile ]---------------------------------------------------------------------------------------
 
-router.post("/profile", authenticate, validate(updateProfileSchema), userController.updateProfile);
+router.patch("/profile", authenticate, validate(updateProfileSchema), userController.updateProfile);
 router.post("/profile/avatar", authenticate, handleAvatarUpload, userController.uploadAvatar);
-router.post("/profile/avatar", authenticate, handleCoverUpload, userController.uploadCover);
+router.post("/profile/cover", authenticate, handleCoverUpload, userController.uploadCover);
 
 
 router.get("/:username", optionalAuthenticate, validate(usernameParamSchema, "params"), userController.getProfile);
