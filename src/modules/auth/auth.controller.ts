@@ -174,7 +174,9 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   // "Verify email" button there — see verify-email/[token]/page.tsx),
   // not hit directly by browser navigation, so this returns JSON that
   // page can react to instead of redirecting itself.
-  res.status(200).json(new ApiResponse(200, "Email verified successfully", null));
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Email verified successfully", null));
 });
 
 export const resendVerification = asyncHandler(
@@ -190,7 +192,7 @@ export const resendVerification = asyncHandler(
  *
  * Returns the current user's latest state without changing anything.
  * Uses the same response shape as login, register, and refresh-token.
- * 
+ *
  * It is safe to call whenever the frontend already has a valid access token
  * and needs fresh user data—for example, to re-check
  * isProfileComplete, isVerified, or hasEmail after onboarding.
@@ -227,9 +229,42 @@ export const completeEmail = asyncHandler(
 );
 
 // ============================================================
-// ------------| OAUTH CONTROLLERS |------------
+// --------------------| CHANGE PASSWORD |---------------------
 // ============================================================
+export const changePassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { currentPassword, newPassword } = req.body;
 
+    await authService.changePassword(
+      req.user!.userId,
+      currentPassword,
+      newPassword,
+    );
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Password changes successfully", null));
+  },
+);
+
+// ============================================================
+// -------------------| CONNECTED ACCOUNTS |-------------------
+// ============================================================
+export const getConnectedAccounts = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await authService.getConnectedAccounts(req.user!.userId);
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, "Connected accounts fetched successfully", result),
+      );
+  },
+);
+
+// ============================================================
+// --------------------| OAUTH CONTROLLERS |-------------------
+// ============================================================
 type ProviderName = "google" | "github" | "linkedin";
 
 const providerMap: Record<

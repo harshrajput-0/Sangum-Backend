@@ -593,7 +593,7 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
     }
   }
 
-// ===[ CASE 3 - Creating user ]---------------------------------
+  // ===[ CASE 3 - Creating user ]---------------------------------
   // start session
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -609,7 +609,9 @@ export const handleOAuthLogin = async (profile: OAuthProfile) => {
         {
           _id: userId,
           accountId,
-          username: await generateUniqueUsername(profile.email ?? profile.displayName),
+          username: await generateUniqueUsername(
+            profile.email ?? profile.displayName,
+          ),
           displayName: profile.displayName,
           // Seed from the OAuth provider's profile picture when available so
           // onboarding step 2 (avatar) can default to it instead of falling
@@ -701,4 +703,60 @@ export const completeEmail = async (
   // set email with account and email
   await authRepository.setEmail(account._id.toString(), email);
   await sendVerificationEmail(account._id.toString(), email); // Sends the actual mail
+};
+
+// ============================================================
+// --------------------| CHANGE PASSWORD |---------------------
+// ============================================================
+// For Authenticated User - current-password-verificaiton required
+// Seperate from forgetPassword/resetPassword which is for
+// unauthenticated user: token based for someone locked out
+export const changePassword = async (
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> => {
+  const account = await authRepository.findByUserIdWithPassword(userId);
+  if (!account) {
+    throw ApiError.notFound("Account not found");
+  }
+
+  // OAuth account have no password to verify
+  // Send them throudh forget-password to set one instead of failling
+  if (!account.password) {
+    throw ApiError.badRequest(
+      "This account doesn't have password set yet. User 'Froget password' to set one",
+    );
+  }
+
+  const isMatch = await account.comparePassword(currentPassword);
+  if (!isMatch) {
+    throw ApiError.unauthorized("Current password is incorrect");
+  }
+
+  await authRepository.updatePassword(account._id.toString(), newPassword);
+
+  await authRepository.clearRefreshToken(account._id.toString());
+
+  return;
+};
+
+// ===============================================================
+// --------------------| CONNECTED ACCOUNTS |---------------------
+// ===============================================================
+// Read only for now - only reports providers linked via
+// register/login via OAuth
+
+// TODO: CREATE A CONNECT FLOW WHEN AUTHENTICATED -------------------------------
+export const getConnectedAccounts = async (userId: string) => {
+  const account = await authRepository.findByUserId(userId);
+
+  if (!account) {
+    throw ApiError.notFound("Account not found");
+  }
+
+  return account.authProviders.map((p) => ({
+    provider: p.provider,
+    connectedAt: p.connectedAt,
+  }));
 };

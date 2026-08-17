@@ -16,6 +16,13 @@ export const findByUserId = (userId: string) => {
   return Account.findOne({ userId }).select("+refreshToken");
 };
 
+// find userId
+// password included - used by changePassword's current-password check.
+// Only called when password is needed
+export const findByUserIdWithPassword = (userId: string) => {
+  return Account.findOne({ userId }).select("+password");
+}
+
 // find by accountId
 // (was previously calling findById({ accountId }) — passing an object
 // where Mongoose expects a plain id string, so this always returned

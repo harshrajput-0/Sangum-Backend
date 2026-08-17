@@ -51,4 +51,12 @@ export const uploadAvatar = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
+
+// Upload Cover
+export const uploadCover = multer({
+  storage,
+  fileFilter,
+  limits: {fileSize: 5 * 1024 * 124 }, // 8MB
+})
+
 const upload = multer({ storage: storage })

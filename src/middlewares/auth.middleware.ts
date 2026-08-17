@@ -36,6 +36,11 @@ export const optionalAuthenticate = (
   const authHeader = req.headers.authorization;
   const [schema, token] = authHeader?.split(" ") ?? [];
 
+  // Same fix as authenticate() above — split(" ") returns "Bearer", not
+  // "Bearer " with a trailing space. Checking for "Bearer " therefore never
+  // matched a valid Authorization header, causing optionalAuthenticate() to
+  // silently skip req.user for every request (e.g. GET /users/:username's
+  // isOwnProfile).
   if (schema !== "Bearer " || !token) {
     return next();
   }

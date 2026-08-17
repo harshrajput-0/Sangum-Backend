@@ -9,6 +9,7 @@ import {
   resetPasswordSchema,
   tokenParamSchema,
   completeEmailSchema,
+  changePasswordSchema,
 } from "./auth.validaton.js";
 
 import { authRateLimit } from "../../middlewares/rateLimit.middleware.js";
@@ -57,6 +58,18 @@ router.post(
   authController.completeEmail,
 );
 
+router.post(
+  "/change-password",
+  authenticate,
+  validate(changePasswordSchema),
+  authController.changePassword,
+);
+
+router.post(
+  "/connected-accounts",
+  authenticate,
+  authController.getConnectedAccounts,
+);
 
 // ====[ OAuth Authenticatioin]------------------------------------------
 router.get("/oauth/:provider", authController.oauthRedirect);
