@@ -14,6 +14,7 @@ import userRoutes from "./modules/users/user.routes.js";
 
 import tagRoutes from "./modules/tags/tag.routes.js"
 import notificationRoutes from "./modules/notifications/notification.routes.js"
+import followRoutes from "./modules/follows/follow.routes.js"
 
 export const createApp = (): Application => {
   const app = express();
@@ -45,6 +46,10 @@ export const createApp = (): Application => {
 
   app.use(`${API_PREFIX}/tags`, tagRoutes);
   app.use(`${API_PREFIX}/notifications`, notificationRoutes);
+
+
+  app.use(`${API_PREFIX}/users`, followRoutes); // adds /:userId/follow, /followers, etc.
+
 
 
   app.use("/api", contactRoutes);

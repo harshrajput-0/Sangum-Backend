@@ -2,13 +2,13 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 // import { IUser } from "./user.model";
 
 // ===| Interface |────────────────────────────────────────────────────────────────
-export interface IUserStat {
+export interface IUserStats {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   postCount: number;
   commentCount: number;
   resourceCount: number;
-  followerCount: number;
+  followersCount: number;
   followingCount: number;
   reactionReceived: number;
   reactionGiven: number;
@@ -21,7 +21,7 @@ export interface IUserStat {
 
 // ===| Schema |─────────────────────────────────────────────────────────────────
 
-const userStatsSchema = new Schema<IUserStat>(
+const userStatsSchema = new Schema<IUserStats>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -49,7 +49,7 @@ const userStatsSchema = new Schema<IUserStat>(
       min: 0    // avoid negative value
     },
 
-    followerCount: {
+    followersCount: {
       type: Number,
       default: 0,
       min: 0    // avoid negative value
@@ -106,5 +106,5 @@ userStatsSchema.index({ followersCount: -1 });
 
 // ===| Model |─────────────────────────────────────────────────────────────────
 
-const UserStats = mongoose.model<IUserStat>("UserStats", userStatsSchema);
+const UserStats = mongoose.model<IUserStats>("UserStats", userStatsSchema);
 export default UserStats;
