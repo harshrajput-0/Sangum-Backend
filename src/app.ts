@@ -12,6 +12,8 @@ import contactRoutes from "./modules/contact/contact.routes.js";
 import waitlistRountes from "./modules/waitlist/waitlist.routes.js";
 import userRoutes from "./modules/users/user.routes.js";
 
+import tagRoutes from "./modules/tags/tag.routes.js"
+
 export const createApp = (): Application => {
   const app = express();
 
@@ -38,6 +40,10 @@ export const createApp = (): Application => {
 
   app.use(`${API_PREFIX}/auth`, authRoutes);
   app.use(`${API_PREFIX}/users`, userRoutes);
+
+
+  app.use(`${API_PREFIX}/tags`, tagRoutes);
+
 
   app.use("/api", contactRoutes);
   app.use("/api", waitlistRountes);
