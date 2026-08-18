@@ -15,6 +15,7 @@ import userRoutes from "./modules/users/user.routes.js";
 import tagRoutes from "./modules/tags/tag.routes.js"
 import notificationRoutes from "./modules/notifications/notification.routes.js"
 import followRoutes from "./modules/follows/follow.routes.js"
+import mediaRoutes from "./modules/media/media.routes.js"
 
 export const createApp = (): Application => {
   const app = express();
@@ -45,6 +46,7 @@ export const createApp = (): Application => {
 
 
   app.use(`${API_PREFIX}/tags`, tagRoutes);
+  app.use(`${API_PREFIX}/media`, mediaRoutes);
   app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 
 
