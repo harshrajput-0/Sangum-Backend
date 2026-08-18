@@ -1,5 +1,5 @@
-import asyncHandler from "../../utils/asyncHandler.js";
-import ApiResponse from "../../utils/ApiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
 import * as contactServices from "./contact.service.js";
 
 export const sendMessage = asyncHandler(async (req, res) => {

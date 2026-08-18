@@ -4,7 +4,7 @@ import { AuthResponse, AuthUserResponse, OAuthProfile } from "./auth.types.js";
 import * as authRepository from "./auth.repository.js";
 import * as userRepository from "../users/user.repository.js";
 import { generateUniqueUsername } from "../users/user.services.js";
-import ApiError from "../../utils/ApiError.js";
+import { ApiError } from "../../utils/ApiError.js";
 import User, { UserRole } from "../users/user.model.js";
 import {
   generateAccessToken,

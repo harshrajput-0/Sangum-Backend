@@ -1,4 +1,4 @@
-class ApiResponse<T> {
+export class ApiResponse<T> {
   public success = true;
 
   constructor(
@@ -9,5 +9,3 @@ class ApiResponse<T> {
     // this.success = statusCode < 400;            // Onely if ApiError handles both response and error
   }
 }
-
-export default ApiResponse;

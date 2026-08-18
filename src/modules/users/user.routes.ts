@@ -4,7 +4,7 @@ import { authenticate, optionalAuthenticate } from "../../middlewares/auth.middl
 import { validate } from "../../middlewares/validation.middleware.js";
 import { onboardingSchema, updateProfileSchema, usernameParamSchema} from "./user.validation.js";
 import { uploadAvatar, uploadCover } from "../../config/multer.js";
-import ApiError from "../../utils/ApiError.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 const router = Router();
 

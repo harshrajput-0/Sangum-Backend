@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import ApiError from "../utils/ApiError.js";
+import { ApiError } from "../utils/ApiError.js";
 import { verifyAccessToken } from "../utils/generateTokens.js";
 import { logger } from "../utils/logger.js";
 

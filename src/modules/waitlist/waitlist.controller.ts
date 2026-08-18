@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Waitlist } from "./waitlist.model.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const joinWaitlist = asyncHandler( async(req: Request, res: Response) => {
     try {

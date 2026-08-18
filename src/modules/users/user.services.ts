@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import ApiError from "../../utils/ApiError.js";
+import { ApiError } from "../../utils/ApiError.js";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary.js";
 import * as userRepository from "./user.repository.js";
 import * as authRespository from "../auth/auth.repository.js";
