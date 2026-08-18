@@ -1,6 +1,6 @@
 import { UserRole } from "../users/user.model.js";
 import { AuthProvider } from "./account.model.js";
-import { AccessTokenPayload } from "../../utils/generateTokens.js"; // adjust path if wrong
+import { AccessTokenPayload } from "../../utils/generateTokens.js"; 
 
 //===| Request Payloads |---------------------------------------------------
 export interface RegisterPayload {
@@ -37,6 +37,11 @@ export interface AuthUserResponse {
   isProfileComplete: boolean;
   isVerified: boolean;
   hasEmail: boolean;
+  // Optional because account.email itself is optional (sparse index —
+  // OAuth-first accounts can exist with none yet). null, not just
+  // absent, so consumers always get an explicit signal rather than
+  // needing to handle "the key doesn't exist" separately.
+  email: string | null;
 }
 
 export interface AuthResponse {

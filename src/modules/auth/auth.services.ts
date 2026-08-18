@@ -11,8 +11,8 @@ import {
   generateRefreshToken,
   generateEmailVerificationToken,
   verifyEmailVerificationToken,
-  AccessTokenPayload,
-  RefreshTokenPayload,
+  // AccessTokenPayload,
+  // RefreshTokenPayload,
   verifyRefreshToken,
 } from "../../utils/generateTokens.js";
 
@@ -41,6 +41,7 @@ const toAuthUserResponse = (user: any, account: any): AuthUserResponse => ({
   isProfileComplete: user.isProfileComplete,
   isVerified: account.isVerified,
   hasEmail: !account.needsEmail(), // <-- frontend uses this to branch onboarding
+  email: account.email ?? null,
 });
 
 // How long an unverified account "holds" its email/username before a
