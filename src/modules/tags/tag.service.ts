@@ -76,7 +76,9 @@ const generateUniqueSlug = async (name: string): Promise<string> => {
   while (await tagRepository.checkSlugTaken(candidate)) {
     attempt += 1;
     if (attempt > 20) {
-      throw ApiError.conflict("Couldn't generate an available URL for this tag name");
+      throw ApiError.conflict(
+        "Couldn't generate an available URL for this tag name",
+      );
     }
     candidate = `${base}-${attempt}`;
   }
@@ -90,7 +92,7 @@ const generateUniqueSlug = async (name: string): Promise<string> => {
 
 export const createTag = async (
   userId: string,
-  payload: CreateTagPayload
+  payload: CreateTagPayload,
 ): Promise<TagResponse> => {
   const nameTaken = await tagRepository.checkNameTaken(payload.name);
   if (nameTaken) {
@@ -112,7 +114,9 @@ export const createTag = async (
   if (payload.color) data.color = payload.color;
 
   const created = await tagRepository.createTag(data as any);
-  const populated = await tagRepository.findByIdPopulated(created._id.toString());
+  const populated = await tagRepository.findByIdPopulated(
+    created._id.toString(),
+  );
   return toTagResponse(populated);
 };
 
@@ -126,32 +130,40 @@ export const getTagBySlug = async (slug: string): Promise<TagResponse> => {
   return toTagResponse(tag);
 };
 
-
 // ==| AFTER SEARCH IS AVAILABLE |-------------------------------------------
-// export const listTags = async (query: ListTagsQuery): Promise<PaginatedTags> => {
-//   const { tags, total } = await tagRepository.listTags(
-//     { isOfficial: query.isOfficial },
-//     query.page,
-//     query.limit,
-//     query.sort
-//   );
+export const listTags = async (
+  query: ListTagsQuery,
+): Promise<PaginatedTags> => {
+  const filters =
+    query.isOfficial !== undefined ? { isOfficial: query.isOfficial } : {};
 
-//   return {
-//     tags: tags.map(toTagResponse),
-//     pagination: buildPaginationMeta({ page: query.page, limit: query.limit }, total),
-//   };
-// };
+  const { tags, total } = await tagRepository.listTags(
+    filters,
+    query.page,
+    query.limit,
+    query.sort,
+  );
 
+  return {
+    tags: tags.map(toTagResponse),
+    pagination: buildPaginationMeta(query.page, query.limit, total),
+  };
+};
 
+export const searchTags = async (
+  query: SearchTagsQuery,
+): Promise<PaginatedTags> => {
+  const { tags, total } = await tagRepository.searchTags(
+    query.q,
+    query.page,
+    query.limit,
+  );
 
-// export const searchTags = async (query: SearchTagsQuery): Promise<PaginatedTags> => {
-//   const { tags, total } = await tagRepository.searchTags(query.q, query.page, query.limit);
-
-//   return {
-//     tags: tags.map(toTagResponse),
-//     pagination: buildPaginationMeta({ page: query.page, limit: query.limit }, total),
-//   };
-// };
+  return {
+    tags: tags.map(toTagResponse),
+    pagination: buildPaginationMeta(query.page, query.limit, total),
+  };
+};
 
 // ─────────────────────────────────────────────────────────────────────────
 // UPDATE / DELETE — moderator-only, see module header
@@ -160,7 +172,7 @@ export const getTagBySlug = async (slug: string): Promise<TagResponse> => {
 export const updateTag = async (
   tagId: string,
   userRole: UserRole,
-  payload: UpdateTagPayload
+  payload: UpdateTagPayload,
 ): Promise<TagResponse> => {
   requireModerator(userRole);
 
@@ -193,7 +205,10 @@ export const updateTag = async (
  * always 0 in practice — but this guard is written for when it isn't,
  * not left as a TODO to remember later.
  */
-export const deleteTag = async (tagId: string, userRole: UserRole): Promise<void> => {
+export const deleteTag = async (
+  tagId: string,
+  userRole: UserRole,
+): Promise<void> => {
   requireModerator(userRole);
 
   const existing = await tagRepository.findByIdRaw(tagId);
@@ -201,14 +216,17 @@ export const deleteTag = async (tagId: string, userRole: UserRole): Promise<void
 
   if (existing.usageCount > 0) {
     throw ApiError.conflict(
-      "This tag is still in use and can't be deleted — remove it from all content first"
+      "This tag is still in use and can't be deleted — remove it from all content first",
     );
   }
 
   await tagRepository.deleteById(tagId);
 };
 
-export const markOfficial = async (tagId: string, userRole: UserRole): Promise<TagResponse> => {
+export const markOfficial = async (
+  tagId: string,
+  userRole: UserRole,
+): Promise<TagResponse> => {
   requireModerator(userRole);
 
   const updated = await tagRepository.setOfficial(tagId, true);
@@ -217,7 +235,10 @@ export const markOfficial = async (tagId: string, userRole: UserRole): Promise<T
   return toTagResponse(updated);
 };
 
-export const unmarkOfficial = async (tagId: string, userRole: UserRole): Promise<TagResponse> => {
+export const unmarkOfficial = async (
+  tagId: string,
+  userRole: UserRole,
+): Promise<TagResponse> => {
   requireModerator(userRole);
 
   const updated = await tagRepository.setOfficial(tagId, false);
@@ -225,7 +246,3 @@ export const unmarkOfficial = async (tagId: string, userRole: UserRole): Promise
 
   return toTagResponse(updated);
 };
-export function listTags(query: { page: number; limit: number; isOfficial?: boolean; sort: "popular" | "newest" | "alphabetical"; }) {
-    throw new Error("Function not implemented.");
-}
-
