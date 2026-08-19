@@ -11,13 +11,11 @@ import {
   generateRefreshToken,
   generateEmailVerificationToken,
   verifyEmailVerificationToken,
-  // AccessTokenPayload,
-  // RefreshTokenPayload,
   verifyRefreshToken,
 } from "../../utils/generateTokens.js";
 
 import { env } from "../../config/env.js";
-import UserStats from "../users/userStats.model.js";
+import UserStats from "../users/userStats.model.js"; 
 
 import { sendEmail } from "../../services/email.service.js";
 import { verificationTemplate } from "../../templates/verification.template.js";

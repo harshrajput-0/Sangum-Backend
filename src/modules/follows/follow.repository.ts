@@ -1,6 +1,6 @@
 import Follow, { IFollow } from "./follow.model.js";
 import User from "../users/user.model.js";
-import UserStats from "../users/userStats.model.js";
+import UserStats from "../users/userStats.model.js"; 
 
 /**
  * ─────────────────────────────────────────────────────────────────────────

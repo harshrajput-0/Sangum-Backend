@@ -4,7 +4,6 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { Request, Response, NextFunction } from "express";
 
-import { env } from "./config/env.js";
 import { ApiError } from "./utils/ApiError.js";
 
 import authRoutes from "./modules/auth/auth.routes.js";

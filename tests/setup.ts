@@ -3,7 +3,7 @@ import { MongoMemoryReplSet } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import Account from "../src/modules/auth/account.model.js";
 import User from "../src/modules/users/user.model.js";
-import UserStats from "../src/modules/users/userStat.model.js";
+import UserStats from "../src/modules/users/userStats.model.js";
 
 let replset: MongoMemoryReplSet;
 
