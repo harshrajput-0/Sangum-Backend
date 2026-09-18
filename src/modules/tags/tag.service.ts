@@ -246,3 +246,11 @@ export const unmarkOfficial = async (
 
   return toTagResponse(updated);
 };
+
+export function processTags(tags: string[], userId: string) {
+  throw new Error("Function not implemented.");
+}
+export function incrementUsage(tagIds: void | never[]) {
+  throw new Error("Function not implemented.");
+}
+
